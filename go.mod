@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/Flagsmith/flagsmith-terraform-provider
 
 go 1.17
 
