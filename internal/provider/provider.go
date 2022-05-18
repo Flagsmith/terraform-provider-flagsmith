@@ -35,7 +35,7 @@ type provider struct {
 
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
-	Example types.String `tfsdk:"example"`
+	APIKey types.String `tfsdk:"api_key"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -46,6 +46,10 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if data.APIKey.Null{
+		resp.Diagnostics.AddError("Unable to find API Key", "API Key cannot be an empty string")
+	}
+	return
 
 	// Configuration values are now available.
 	// if data.Example.Null { /* ... */ }
@@ -71,9 +75,9 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"example": {
-				MarkdownDescription: "Example provider attribute",
-				Optional:            true,
+			"api_key": {
+				MarkdownDescription: "API key used by flagsmith library",
+				Optional:            false,
 				Type:                types.StringType,
 			},
 		},
