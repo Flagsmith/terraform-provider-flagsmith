@@ -1,6 +1,6 @@
-module github.com/Flagsmith/flagsmith-terraform-provider
+module github.com/Flagsmith/terraform-provider-flagsmith
 
-go 1.17
+go 1.18
 
 require (
 	github.com/hashicorp/terraform-plugin-docs v0.8.1

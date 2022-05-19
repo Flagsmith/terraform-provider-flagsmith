@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/Flagsmith/flagsmith-terraform-provider/internal/provider"
+	"github.com/Flagsmith/terraform-provider-flagsmith/flagsmith"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
@@ -40,7 +40,7 @@ func main() {
 		Debug:   debug,
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(version), opts)
+	err := providerserver.Serve(context.Background(), flagsmith.New(version), opts)
 
 	if err != nil {
 		log.Fatal(err.Error())
