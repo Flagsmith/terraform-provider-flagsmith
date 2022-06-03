@@ -31,6 +31,28 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				},
 				Type: types.NumberType,
 			},
+			"feature_state_value": {
+				Optional: true,
+				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+					"type": {
+						Type: types.StringType,
+						MarkdownDescription: "Type of the feature state value",
+						Optional: true,
+					},
+					"string_value": {
+						Type: types.StringType,
+						Optional: true,
+					},
+					"integer_value": {
+						Type: types.NumberType,
+						Optional: true,
+					},
+					"boolean_value": {
+						Type: types.BoolType,
+						Optional: true,
+					},
+				}),
+			},
 
 			"enabled": {
 				MarkdownDescription: "Controls wether the feature is enabled or not",
