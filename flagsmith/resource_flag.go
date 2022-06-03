@@ -85,13 +85,6 @@ func (t flagResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (t
 	}, diags
 }
 
-type flagResourceData struct {
-	Id      types.Int64 `tfsdk:"id"`
-	Enabled types.Bool  `tfsdk:"enabled"`
-	Feature types.Int64 `tfsdk:"feature"`
-	Environment types.Int64 `tfsdk:"environment"`
-}
-
 func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	var data flagResourceData
 
