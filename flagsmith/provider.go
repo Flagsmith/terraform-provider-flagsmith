@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Flagsmith/flagsmith-go-api-client"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const BaseAPIURL = "https://api.flagsmith.com/api/v1"
 
 // Ensure provider defined types fully satisfy framework interfaces
 var _ tfsdk.Provider = &provider{}
@@ -18,6 +22,8 @@ type provider struct {
 	// communicate with the upstream service. Resource and DataSource
 	// implementations can then make calls using this client.
 	//
+
+	client *flagsmithapi.Client
 	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
 	// client vendorsdk.ExampleClient
 
@@ -34,10 +40,12 @@ type provider struct {
 
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
-	APIKey types.String `tfsdk:"api_key"`
+	MasterAPIKey types.String `tfsdk:"api_key"`
+	BaseAPIURL types.String `tfsdk:"base_api_url"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+
 	var data providerData
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -45,10 +53,20 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if data.APIKey.Null{
-		resp.Diagnostics.AddError("Unable to find API Key", "API Key cannot be an empty string")
+	// TODO: do we need this check on master api key?
+	if data.MasterAPIKey.Null  || data.MasterAPIKey.Unknown || data.MasterAPIKey.Value == " " {
+		resp.Diagnostics.AddError("Unable to find master_api_key", "master_api_key cannot be an empty string")
 	}
-	return
+
+	baseAPIURL := BaseAPIURL;
+	if data.BaseAPIURL.Value != "" {
+		baseAPIURL = data.BaseAPIURL.Value
+
+	}
+
+	client := flagsmithapi.NewClient(data.MasterAPIKey.Value, baseAPIURL)
+	p.client = client
+
 
 	// Configuration values are now available.
 	// if data.Example.Null { /* ... */ }
@@ -57,11 +75,13 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	// as authentication or logging, this is a great opportunity to do so.
 
 	p.configured = true
+
+	return
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"flag": flagResourceType{},
+		"flagsmith_flag": flagResourceType{},
 	}, nil
 }
 
@@ -76,11 +96,19 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"api_key": {
-				MarkdownDescription: "API key used by flagsmith library",
+			"master_api_key": {
+				MarkdownDescription: "Master API key used by flagsmith api client",
 				Required:            true,
 				Type:                types.StringType,
+				Sensitive: true,
 			},
+			"base_api_url": {
+				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version",
+				Required: false,
+				Optional: true,
+				Type: types.StringType,
+			},
+
 		},
 	}, nil
 }
