@@ -20,21 +20,32 @@ type flagResourceType struct{}
 func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Feature Flag resource",
+		MarkdownDescription: "Feature State resource",
 
 		Attributes: map[string]tfsdk.Attribute{
-			"configurable_attribute": {
-				MarkdownDescription: "",
-				Optional:            true,
-				Type:                types.StringType,
-			},
 			"id": {
 				Computed:            true,
-				MarkdownDescription: "Example identifier",
+				MarkdownDescription: "ID of the featurestate",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					tfsdk.UseStateForUnknown(),
 				},
-				Type: types.StringType,
+				Type: types.NumberType,
+			},
+
+			"enabled": {
+				MarkdownDescription: "Controls wether the feature is enabled or not",
+				Required:            true,
+				Type:                types.BoolType,
+			},
+			"feature": {
+				MarkdownDescription: "ID of the feature",
+				Required:            true,
+				Type:                types.NumberType,
+			},
+			"environment": {
+				MarkdownDescription: "ID of the environment",
+				Required:            true,
+				Type:                types.NumberType,
 			},
 		},
 	}, nil
@@ -52,11 +63,13 @@ func (t flagResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (t
 	}, diags
 }
 
-
 type flagResourceData struct {
-	ConfigurableAttribute types.String `tfsdk:"configurable_attribute"`
-	Id                    types.String `tfsdk:"id"`
+	Id      types.Int64 `tfsdk:"id"`
+	Enabled types.Bool  `tfsdk:"enabled"`
+	Feature types.Int64 `tfsdk:"feature"`
+	Environment types.Int64 `tfsdk:"environment"`
 }
+
 func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	var data flagResourceData
 
@@ -77,7 +90,7 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 
 	// For the purposes of this example code, hardcoding a response value to
 	// save into the Terraform state.
-	data.Id = types.String{Value: "example-id"}
+	data.Id = types.Int64{Value: 1}
 
 	// write logs using the tflog package
 	// see https://pkg.go.dev/github.com/hashicorp/terraform-plugin-log/tflog
