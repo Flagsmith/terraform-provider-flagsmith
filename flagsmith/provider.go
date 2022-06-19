@@ -40,7 +40,7 @@ type provider struct {
 
 // providerData can be used to store data from the Terraform configuration.
 type providerData struct {
-	MasterAPIKey types.String `tfsdk:"api_key"`
+	MasterAPIKey types.String `tfsdk:"master_api_key"`
 	BaseAPIURL types.String `tfsdk:"base_api_url"`
 }
 

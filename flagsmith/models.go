@@ -4,18 +4,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type FeatureStateValue struct {
+type FeatureStateValueType struct {
 	Type types.String `tfsdk:"type"`
-	StringValue types.String `tfsdk:"string_value"`
-	IntegerValue types.Int64 `tfsdk:"integer_value"`
-	BooleanValue types.Bool `tfsdk:"boolean_value"`
-
+	StringValue  types.String `tfsdk:"string_value"`
+	IntegerValue types.Number `tfsdk:"integer_value"`
+	BooleanValue types.Bool   `tfsdk:"boolean_value"`
 
 }
+
+type June struct {
+	ID types.Number `tfsdk:"id"`
+}
+
 type flagResourceData struct {
-	Id      types.Int64 `tfsdk:"id"`
-	Enabled types.Bool  `tfsdk:"enabled"`
-	FeatureStateValue types.Bool `tfsdk:"feature_state_value"`
-	Feature types.Int64 `tfsdk:"feature"`
-	Environment types.Int64 `tfsdk:"environment"`
+	ID                types.Number          `tfsdk:"id"`
+	Enabled           types.Bool            `tfsdk:"enabled"`
+	FeatureStateValue *FeatureStateValueType `tfsdk:"feature_state_value"`
+	Feature           types.Number          `tfsdk:"feature"`
+	Environment       types.Number          `tfsdk:"environment"`
 }
