@@ -2,6 +2,7 @@ package flagsmith
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -117,24 +118,36 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	resp.Diagnostics.Append(diags...)
 }
 func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
-	var data flagResourceData
-
-	diags := req.Plan.Get(ctx, &data)
+	// Get plan values
+	var plan flagResourceData
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// example, err := d.provider.client.UpdateExample(...)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
-	//     return
-	// }
+	// Get current state
+	var state flagResourceData
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	diags = resp.State.Set(ctx, &data)
+	// Generate API request body from plan
+	intFeatureStateID, _ := state.ID.Value.Int64()
+	clientFeatureState := plan.ToClientFS(intFeatureStateID)
+	updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
+		return
+	}
+	resoureData := MakeFlagResourceDataFromClientFS(updatedClientFS)
+
+	// Update the state with the new values
+	diags = resp.State.Set(ctx, &resoureData)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -149,28 +162,13 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	}
 	featureStateID := data.ID.Value
 
-	// TODO: some error handling
-	intFeatureStateID, _  := featureStateID.Int64()
+	intFeatureStateID, _ := featureStateID.Int64()
 	featureState, err := r.provider.client.GetFeatureState(intFeatureStateID)
 	if err != nil {
 		panic(err)
 	}
-	fsValue := FeatureStateValueType{
-		Type:         types.String{Value: featureState.FeatureStateValue.Type},
-		StringValue:  types.String{Value: featureState.FeatureStateValue.StringValue},
-		IntegerValue: types.Number{Value: big.NewFloat(float64(featureState.FeatureStateValue.IntegerValue))},
-		BooleanValue: types.Bool{Value: featureState.FeatureStateValue.BooleanValue},
-	}
-	tflog.Trace(ctx, "response: "+string(featureState.ID))
-	var result = flagResourceData{
-		ID:                types.Number{Value: featureStateID},
-		Enabled:           types.Bool{Value: featureState.Enabled},
-		FeatureStateValue: &fsValue,
-		Feature:           types.Number{Value: big.NewFloat(float64(featureState.Feature))},
-		Environment:       types.Number{Value: big.NewFloat(float64(featureState.Environment))},
-	}
-
-	diags = resp.State.Set(ctx, &result)
+	resoureData := MakeFlagResourceDataFromClientFS(featureState)
+	diags = resp.State.Set(ctx, &resoureData)
 	if diags.HasError() {
 		return
 	}
