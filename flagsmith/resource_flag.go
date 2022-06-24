@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"math/big"
-	"strconv"
+	"strings"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -32,6 +31,16 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 					tfsdk.UseStateForUnknown(),
 				},
 				Type: types.NumberType,
+			},
+			"environment_key": {
+				Required:            true,
+				MarkdownDescription: "API key for the environment",
+				Type:                types.StringType,
+			},
+			"feature_name": {
+				Required:            true,
+				MarkdownDescription: "Name of the feature",
+				Type:                types.StringType,
 			},
 			"feature_state_value": {
 				Optional: true,
@@ -96,27 +105,72 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Read and load the state of the object
+	readResponse := tfsdk.ReadResourceResponse{State: resp.State}
+	r.Read(ctx, tfsdk.ReadResourceRequest{
+		State: tfsdk.State{
+			Raw:    req.Plan.Raw,
+			Schema: req.Plan.Schema,
+		},
+		ProviderMeta: req.ProviderMeta,
+	}, &readResponse)
+	if readResponse.Diagnostics.HasError() {
+		resp.Diagnostics.Append(readResponse.Diagnostics...)
+		tflog.Error(ctx, "Error reading resource state")
+		return
+	}
+	// Log the state
+	elog := fmt.Sprintf("%+v", readResponse.State.Get(ctx, &flagResourceData{}))
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// example, err := d.provider.client.CreateExample(...)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
-	//     return
-	// }
+	tflog.Debug(ctx, elog)
 
-	// For the purposes of this example code, hardcoding a response value to
-	// save into the Terraform state.
-	data.ID = types.Number{Value: big.NewFloat(42)}
+	//Now call update to update the state
+	updateResponse := tfsdk.UpdateResourceResponse{State: resp.State}
+	r.Update(ctx, tfsdk.UpdateResourceRequest{
+		Config:       req.Config,
+		Plan:         req.Plan,
+		State:        readResponse.State,
+		ProviderMeta: req.ProviderMeta,
+	}, &updateResponse)
+	if updateResponse.Diagnostics.HasError() {
+		resp.Diagnostics.Append(updateResponse.Diagnostics...)
+		tflog.Error(ctx, "Error updating resource state")
+		return
+	}
+	resp.State = updateResponse.State
+	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
-	// write logs using the tflog package
-	// see https://pkg.go.dev/github.com/hashicorp/terraform-plugin-log/tflog
-	// for more information
-	tflog.Trace(ctx, "created a resource")
-
-	diags = resp.State.Set(ctx, &data)
+}
+func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+	var data flagResourceData
+	diags := req.State.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	// Early return if the state is wrong
+	if diags.HasError() {
+		return
+	}
+	featureState, err := r.provider.client.GetEnvironmentFeatureState(data.EnvironmentKey.Value, data.FeatureName.Value)
+	if err != nil {
+		panic(err)
+	}
+	resoureData := MakeFlagResourceDataFromClientFS(featureState)
+	resoureData.EnvironmentKey = data.EnvironmentKey
+	resoureData.FeatureName = data.FeatureName
+	elog := fmt.Sprintf("%+v", resoureData.FeatureStateValue)
+	tflog.Debug(ctx, elog)
+	diags = resp.State.Set(ctx, &resoureData)
+	if diags.HasError() {
+		// Log error from diags
+		for _, diag := range diags {
+			tflog.Error(ctx, diag.Detail())
+		}
+		resp.Diagnostics.Append(diags...)
+		tflog.Error(ctx, "Read: Error setting resource state")
+		return
+	}
 	resp.Diagnostics.Append(diags...)
 }
+
 func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
 	// Get plan values
 	var plan flagResourceData
@@ -145,70 +199,30 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 		return
 	}
 	resoureData := MakeFlagResourceDataFromClientFS(updatedClientFS)
+	resoureData.EnvironmentKey = plan.EnvironmentKey
+	resoureData.FeatureName = plan.FeatureName
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resoureData)
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-
-	var data flagResourceData
-	diags := req.State.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
-	// Early return if the state is wrong
-	if diags.HasError() {
-		return
-	}
-	featureStateID := data.ID.Value
-
-	intFeatureStateID, _ := featureStateID.Int64()
-	featureState, err := r.provider.client.GetFeatureState(intFeatureStateID)
-	if err != nil {
-		panic(err)
-	}
-	resoureData := MakeFlagResourceDataFromClientFS(featureState)
-	diags = resp.State.Set(ctx, &resoureData)
-	if diags.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(diags...)
-}
-
 func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-	var data flagResourceData
+	resp.Diagnostics.AddError("Not implemented", "Delete is not implemented; Please use `terraform state rm <address>` to remove the resource")
+	return
 
-	diags := req.State.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// example, err := d.provider.client.DeleteExample(...)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete example, got error: %s", err))
-	//     return
-	// }
 }
 
 func (r flagResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	featureStateID, err := strconv.Atoi(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Unexpected Import Identifier", "Import ID must be an integer")
+	idParts := strings.Split(req.ID, ",")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: attr_one,attr_two. Got: %q", req.ID),
+		)
 		return
 	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("environment_key"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("feature_name"), idParts[1])...)
 
-	fsID := types.Number{Value: big.NewFloat(float64(featureStateID))}
-	// Add ID to the state
-	diags := resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &fsID)
-
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(diags...)
 }
