@@ -3,8 +3,8 @@ package flagsmith
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"math/big"
 	flagsmithapi "github.com/Flagsmith/flagsmith-go-api-client"
+	"math/big"
 )
 
 type FeatureStateValue struct {
@@ -61,6 +61,8 @@ type flagResourceData struct {
 	FeatureStateValue *FeatureStateValue `tfsdk:"feature_state_value"`
 	Feature           types.Number       `tfsdk:"feature"`
 	Environment       types.Number       `tfsdk:"environment"`
+	FeatureName       types.String       `tfsdk:"feature_name"`
+	EnvironmentKey    types.String       `tfsdk:"environment_key"`
 }
 
 func (f *flagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.FeatureState {
