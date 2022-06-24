@@ -21,8 +21,18 @@ func (f *FeatureStateValue) ToClientFSV() *flagsmithapi.FeatureStateValue {
 			Type:        "unicode",
 			StringValue: &f.StringValue.Value,
 		}
+	case "int":
+		intValue, _ := f.IntegerValue.Value.Int64()
+		return &flagsmithapi.FeatureStateValue{
+			Type:         "int",
+			IntegerValue: &intValue,
+		}
+	case "bool":
+		return &flagsmithapi.FeatureStateValue{
+			Type:         "bool",
+			BooleanValue: &f.BooleanValue.Value,
+		}
 	}
-	// TODO: Implement other types
 	panic("unsupported FeatureStateValue type")
 	return nil
 }
@@ -36,24 +46,26 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 			IntegerValue: types.Number{Null: true, Value: nil},
 			BooleanValue: types.Bool{Null: true},
 		}
+	case "int":
+		return FeatureStateValue{
+			Type:         types.String{Value: fsvType},
+			StringValue:  types.String{Null: true},
+			IntegerValue: types.Number{Value: big.NewFloat(float64(*clientFSV.IntegerValue))},
+			BooleanValue: types.Bool{Null: true},
+		}
+	case "bool":
+		return FeatureStateValue{
+			Type:         types.String{Value: fsvType},
+			StringValue:  types.String{Null: true},
+			IntegerValue: types.Number{Null: true},
+			BooleanValue: types.Bool{Value: *clientFSV.BooleanValue},
+		}
+
 	}
-	// TODO: Implement other types
 	panic("unsupported FeatureStateValue type")
 	return FeatureStateValue{}
-	// if clientResponse.Type == "unicode"{
-
-	// }
-	// return FeatureStateValue{
-	// 	Type: types.String(clientResponse.Type),
-	// 	StringValue: types.String(clientResponse.StringValue),
-	// 	IntegerValue: types.Number(clientResponse.IntegerValue),
-	// 	BooleanValue: types.Bool(clientResponse.BooleanValue),
-	// }
 }
 
-type June struct {
-	ID types.Number `tfsdk:"id"`
-}
 
 type flagResourceData struct {
 	ID                types.Number       `tfsdk:"id"`
