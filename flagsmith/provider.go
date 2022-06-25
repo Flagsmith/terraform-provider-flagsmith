@@ -3,6 +3,7 @@ package flagsmith
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
 
@@ -24,8 +25,6 @@ type provider struct {
 	//
 
 	client *flagsmithapi.Client
-	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
-	// client vendorsdk.ExampleClient
 
 	// configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
@@ -53,8 +52,18 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// TODO: do we need this check on master api key?
-	if data.MasterAPIKey.Null  || data.MasterAPIKey.Unknown || data.MasterAPIKey.Value == " " {
+	var masterAPIKey string
+	if data.MasterAPIKey.Unknown {
+		resp.Diagnostics.AddError("Unable to find master_api_key", "Cannot use unknown value for master_api_key")
+		return
+	}
+	if data.MasterAPIKey.Null {
+		masterAPIKey = os.Getenv("FLAGSMITH_MASTER_API_KEY")
+
+	}else {
+		masterAPIKey = data.MasterAPIKey.Value
+	}
+	if masterAPIKey == "" {
 		resp.Diagnostics.AddError("Unable to find master_api_key", "master_api_key cannot be an empty string")
 	}
 
@@ -64,15 +73,8 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 
 	}
 
-	client := flagsmithapi.NewClient(data.MasterAPIKey.Value, baseAPIURL)
+	client := flagsmithapi.NewClient(masterAPIKey, baseAPIURL)
 	p.client = client
-
-
-	// Configuration values are now available.
-	// if data.Example.Null { /* ... */ }
-
-	// If the upstream provider SDK or HTTP client requires configuration, such
-	// as authentication or logging, this is a great opportunity to do so.
 
 	p.configured = true
 
@@ -97,14 +99,13 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"master_api_key": {
-				MarkdownDescription: "Master API key used by flagsmith api client",
-				Required:            true,
+				MarkdownDescription: "Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`",
+				Optional:            true,
 				Type:                types.StringType,
 				Sensitive: true,
 			},
 			"base_api_url": {
 				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version",
-				Required: false,
 				Optional: true,
 				Type: types.StringType,
 			},
