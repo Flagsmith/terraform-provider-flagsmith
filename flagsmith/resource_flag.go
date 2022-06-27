@@ -209,7 +209,8 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 }
 
 func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-	resp.Diagnostics.AddError("Not implemented", "Delete is not implemented; Please use `terraform state rm <address>` to remove the resource")
+	// Since deleting a feature state does not make sense, we do nothing
+	resp.State.RemoveResource(ctx)
 	return
 
 }
