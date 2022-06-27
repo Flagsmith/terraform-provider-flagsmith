@@ -36,7 +36,6 @@ func (f *FeatureStateValue) ToClientFSV() *flagsmithapi.FeatureStateValue {
 	return nil
 }
 
-
 func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValue) FeatureStateValue {
 	fsvType := clientFSV.Type
 	switch fsvType {
@@ -65,7 +64,6 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 	}
 	return FeatureStateValue{}
 }
-
 
 type FlagResourceData struct {
 	ID                types.Number       `tfsdk:"id"`
