@@ -97,7 +97,7 @@ func (t flagResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (t
 }
 
 func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
-	var data flagResourceData
+	var data FlagResourceData
 
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -120,7 +120,7 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 		return
 	}
 	// Log the state
-	elog := fmt.Sprintf("%+v", readResponse.State.Get(ctx, &flagResourceData{}))
+	elog := fmt.Sprintf("%+v", readResponse.State.Get(ctx, &FlagResourceData{}))
 
 	tflog.Debug(ctx, elog)
 
@@ -142,7 +142,7 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 
 }
 func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-	var data flagResourceData
+	var data FlagResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	// Early return if the state is wrong
@@ -173,7 +173,7 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 
 func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
 	// Get plan values
-	var plan flagResourceData
+	var plan FlagResourceData
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -182,7 +182,7 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 	}
 
 	// Get current state
-	var state flagResourceData
+	var state FlagResourceData
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -192,6 +192,7 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 	// Generate API request body from plan
 	intFeatureStateID, _ := state.ID.Value.Int64()
 	clientFeatureState := plan.ToClientFS(intFeatureStateID)
+
 	updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
 
 	if err != nil {
