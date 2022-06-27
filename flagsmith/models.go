@@ -33,9 +33,10 @@ func (f *FeatureStateValue) ToClientFSV() *flagsmithapi.FeatureStateValue {
 			BooleanValue: &f.BooleanValue.Value,
 		}
 	}
-	panic("unsupported FeatureStateValue type")
 	return nil
 }
+
+
 func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValue) FeatureStateValue {
 	fsvType := clientFSV.Type
 	switch fsvType {
@@ -62,12 +63,11 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 		}
 
 	}
-	panic("unsupported FeatureStateValue type")
 	return FeatureStateValue{}
 }
 
 
-type flagResourceData struct {
+type FlagResourceData struct {
 	ID                types.Number       `tfsdk:"id"`
 	Enabled           types.Bool         `tfsdk:"enabled"`
 	FeatureStateValue *FeatureStateValue `tfsdk:"feature_state_value"`
@@ -77,7 +77,7 @@ type flagResourceData struct {
 	EnvironmentKey    types.String       `tfsdk:"environment_key"`
 }
 
-func (f *flagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.FeatureState {
+func (f *FlagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.FeatureState {
 	intFeature, _ := f.Feature.Value.Int64()
 	intEnvironment, _ := f.Environment.Value.Int64()
 	return &flagsmithapi.FeatureState{
@@ -89,10 +89,10 @@ func (f *flagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.Featur
 	}
 }
 
-// Generate a new flagResourceData from a client FeatureState
-func MakeFlagResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) flagResourceData {
+// Generate a new FlagResourceData from a client FeatureState
+func MakeFlagResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FlagResourceData {
 	fsValue := MakeFeatureStateValueFromClientFSV(clientFS.FeatureStateValue)
-	return flagResourceData{
+	return FlagResourceData{
 		ID:                types.Number{Value: big.NewFloat(float64(clientFS.ID))},
 		Enabled:           types.Bool{Value: clientFS.Enabled},
 		FeatureStateValue: &fsValue,
