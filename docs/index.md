@@ -3,12 +3,12 @@
 page_title: "flagsmith-terraform-provider Provider"
 subcategory: ""
 description: |-
-  
+  The flagsmith provider is used to enable/disable and/or update flag values.
 ---
 
 # flagsmith-terraform-provider Provider
 
-
+The flagsmith provider is used to enable/disable and/or update flag values.
 
 ## Example Usage
 

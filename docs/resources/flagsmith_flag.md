@@ -56,11 +56,10 @@ Optional:
 - `string_value` (String) String value of the feature if the type is `unicode`
 - `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
 
-
 ## Import
 
-Flag can be imported using the `environment_client_key` and `feature_name`
+Import is supported using the following syntax:
 
 ```shell
-
+terraform import flagsmith_flag.some_flag <enviroment_client_key>,<feature_name>
 ```
