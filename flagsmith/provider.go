@@ -16,14 +16,10 @@ const BaseAPIURL = "https://api.flagsmith.com/api/v1"
 
 // Ensure provider defined types fully satisfy framework interfaces
 var _ tfsdk.Provider = &provider{}
-// provider satisfies the tfsdk.Provider interface and usually is included
-// with all Resource and DataSource implementations.
-type provider struct {
-	// client can contain the upstream provider SDK or HTTP client used to
-	// communicate with the upstream service. Resource and DataSource
-	// implementations can then make calls using this client.
-	//
 
+type provider struct {
+	// client contains the upstream provider SDK used to
+	// communicate with the flagsmith api
 	client *flagsmithapi.Client
 
 	// configured is set to true at the end of the Configure method.
@@ -37,10 +33,10 @@ type provider struct {
 	version string
 }
 
-// providerData can be used to store data from the Terraform configuration.
+// providerData is used to store data from the Terraform configuration.
 type providerData struct {
 	MasterAPIKey types.String `tfsdk:"master_api_key"`
-	BaseAPIURL types.String `tfsdk:"base_api_url"`
+	BaseAPIURL   types.String `tfsdk:"base_api_url"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -60,14 +56,14 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	if data.MasterAPIKey.Null {
 		masterAPIKey = os.Getenv("FLAGSMITH_MASTER_API_KEY")
 
-	}else {
+	} else {
 		masterAPIKey = data.MasterAPIKey.Value
 	}
 	if masterAPIKey == "" {
 		resp.Diagnostics.AddError("Unable to find master_api_key", "master_api_key cannot be an empty string")
 	}
 
-	baseAPIURL := BaseAPIURL;
+	baseAPIURL := BaseAPIURL
 	if data.BaseAPIURL.Value != "" {
 		baseAPIURL = data.BaseAPIURL.Value
 
@@ -90,9 +86,6 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	// Does not define any data source
 	return map[string]tfsdk.DataSourceType{}, nil
-	// return map[string]tfsdk.DataSourceType{
-	// 	"flag": flagResourceType{},
-	// }, nil
 }
 
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -102,14 +95,13 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 				MarkdownDescription: "Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`",
 				Optional:            true,
 				Type:                types.StringType,
-				Sensitive: true,
+				Sensitive:           true,
 			},
 			"base_api_url": {
 				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version",
-				Optional: true,
-				Type: types.StringType,
+				Optional:            true,
+				Type:                types.StringType,
 			},
-
 		},
 	}, nil
 }
