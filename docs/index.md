@@ -13,8 +13,8 @@ description: |-
 ## Example Usage
 
 ```terraform
-provider "scaffolding" {
-  # example configuration here
+provider "flagsmith" {
+  master_api_key = "<Master API Key>"
 }
 ```
 
@@ -23,4 +23,5 @@ provider "scaffolding" {
 
 ### Optional
 
-- `example` (String) Example provider attribute
+- `base_api_url` (String) Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version
+- `master_api_key` (String, Sensitive) Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`
