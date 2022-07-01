@@ -3,12 +3,12 @@
 page_title: "flagsmith_flag Resource - flagsmith-terraform-provider"
 subcategory: ""
 description: |-
-  Feature State resource
+  Flagsmith feature/ Remote config associated with an environment
 ---
 
 # flagsmith_flag (Resource)
 
-Feature State resource
+Flagsmith feature/ Remote config associated with an environment
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ resource "flagsmith_flag" "feature_1_dev" {
 
 - `enabled` (Boolean) Used for enabling/disabling the feature
 - `environment` (Number) ID of the environment
-- `environment_key` (String) API key for the environment
+- `environment_key` (String) Client side environment key associated with the environment
 - `feature` (Number) ID of the feature
 - `feature_name` (String) Name of the feature
 
@@ -51,9 +51,9 @@ resource "flagsmith_flag" "feature_1_dev" {
 
 Optional:
 
-- `boolean_value` (Boolean)
-- `integer_value` (Number)
-- `string_value` (String)
-- `type` (String) Type of the feature state value
+- `boolean_value` (Boolean) Boolean value of the feature if the type is `bool`
+- `integer_value` (Number) Integer value of the feature if the type is `int`
+- `string_value` (String) String value of the feature if the type is `unicode`
+- `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
 
 

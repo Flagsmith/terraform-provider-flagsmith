@@ -21,7 +21,7 @@ type flagResourceType struct{}
 func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Feature State resource",
+		MarkdownDescription: "Flagsmith feature/ Remote config associated with an environment",
 
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -34,7 +34,7 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 			},
 			"environment_key": {
 				Required:            true,
-				MarkdownDescription: "API key for the environment",
+				MarkdownDescription: "Client side environment key associated with the environment",
 				Type:                types.StringType,
 			},
 			"feature_name": {
@@ -47,19 +47,22 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
 					"type": {
 						Type:                types.StringType,
-						MarkdownDescription: "Type of the feature state value",
+						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
 						Required:            true,
 					},
 					"string_value": {
 						Type:     types.StringType,
+						MarkdownDescription: "String value of the feature if the type is `unicode`",
 						Optional: true,
 					},
 					"integer_value": {
 						Type:     types.NumberType,
+						MarkdownDescription: "Integer value of the feature if the type is `int`",
 						Optional: true,
 					},
 					"boolean_value": {
 						Type:     types.BoolType,
+						MarkdownDescription: "Boolean value of the feature if the type is `bool`",
 						Optional: true,
 					},
 				}),
