@@ -57,3 +57,10 @@ Optional:
 - `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
 
 
+## Import
+
+Flag can be imported using the `environment_client_key` and `feature_name`
+
+```shell
+
+```

@@ -50,7 +50,7 @@ func TestAccExampleResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "environment", strconv.Itoa(environmentID())),
 					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "feature", strconv.Itoa(featureID())),
 					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "feature_state_value.string_value", "two"),
-					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "enabled", "true"),
+					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "enabled", "false"),
 				),
 			},
 		},
@@ -60,6 +60,8 @@ func TestAccExampleResource(t *testing.T) {
 func testAccFlagResourceConfig(featureStateValue string, isEnabled bool) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
+# TODO: remove this once https://github.com/Flagsmith/flagsmith/commit/4645956c0bb941fc5ba1d8049e61435873f0d8bf
+# is in master
   base_api_url = "http://localhost:8000/api/v1"
 }
 
