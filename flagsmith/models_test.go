@@ -160,7 +160,6 @@ func TestMakeFlagResourceDataFromClientFS(t *testing.T) {
 
 func TestFlagResourceDataToClientFS(t *testing.T) {
 	//Given
-
 	flagResourceData := FlagResourceData{
 		ID:          types.Number{Value: big.NewFloat(1)},
 		Enabled:     types.Bool{Value: true},

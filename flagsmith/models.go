@@ -87,7 +87,7 @@ func (f *FlagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.Featur
 	}
 }
 
-// Generate a new FlagResourceData from a client FeatureState
+// Generate a new FlagResourceData from client `FeatureState`
 func MakeFlagResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FlagResourceData {
 	fsValue := MakeFeatureStateValueFromClientFSV(clientFS.FeatureStateValue)
 	return FlagResourceData{
