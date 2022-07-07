@@ -123,15 +123,12 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 		},
 		ProviderMeta: req.ProviderMeta,
 	}, &readResponse)
+
 	if readResponse.Diagnostics.HasError() {
 		resp.Diagnostics.Append(readResponse.Diagnostics...)
-		tflog.Error(ctx, "Error reading resource state")
+		tflog.Error(ctx, "Create: Error reading resource state")
 		return
 	}
-	// Log the state
-	elog := fmt.Sprintf("%+v", readResponse.State.Get(ctx, &FlagResourceData{}))
-
-	tflog.Debug(ctx, elog)
 
 	//Now call update to update the state
 	updateResponse := tfsdk.UpdateResourceResponse{State: resp.State}
@@ -141,11 +138,13 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 		State:        readResponse.State,
 		ProviderMeta: req.ProviderMeta,
 	}, &updateResponse)
+
 	if updateResponse.Diagnostics.HasError() {
 		resp.Diagnostics.Append(updateResponse.Diagnostics...)
-		tflog.Error(ctx, "Error updating resource state")
+		tflog.Error(ctx, "Create: Error updating resource state")
 		return
 	}
+
 	resp.State = updateResponse.State
 	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
@@ -163,24 +162,12 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	if err != nil {
 		panic(err)
 	}
-	resoureData := MakeFlagResourceDataFromClientFS(featureState)
+	resourceData := MakeFlagResourceDataFromClientFS(featureState)
 
-	resoureData.EnvironmentKey = data.EnvironmentKey
-	resoureData.FeatureName = data.FeatureName
-	tflog.Error(ctx, "Read resource state000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-	elog := fmt.Sprintf("%+v", resoureData.FeatureStateValue)
-	tflog.Debug(ctx, elog)
+	resourceData.EnvironmentKey = data.EnvironmentKey
+	resourceData.FeatureName = data.FeatureName
 
-	diags = resp.State.Set(ctx, &resoureData)
-	if diags.HasError() {
-		// Log error from diags
-		for _, diag := range diags {
-			tflog.Error(ctx, diag.Detail())
-		}
-		resp.Diagnostics.Append(diags...)
-		tflog.Error(ctx, "Read: Error setting resource state")
-		return
-	}
+	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -214,12 +201,12 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
 		return
 	}
-	resoureData := MakeFlagResourceDataFromClientFS(updatedClientFS)
-	resoureData.EnvironmentKey = plan.EnvironmentKey
-	resoureData.FeatureName = plan.FeatureName
+	resourceData := MakeFlagResourceDataFromClientFS(updatedClientFS)
+	resourceData.EnvironmentKey = plan.EnvironmentKey
+	resourceData.FeatureName = plan.FeatureName
 
 	// Update the state with the new values
-	diags = resp.State.Set(ctx, &resoureData)
+	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -231,15 +218,15 @@ func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceReques
 }
 
 func (r flagResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	idParts := strings.Split(req.ID, ",")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+	importKey := strings.Split(req.ID, ",")
+	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: attr_one,attr_two. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: environment,feature_name Got: %q", req.ID),
 		)
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("environment_key"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("feature_name"), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("environment_key"), importKey[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("feature_name"), importKey[1])...)
 
 }
