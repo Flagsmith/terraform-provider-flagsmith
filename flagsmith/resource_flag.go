@@ -212,6 +212,7 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 
 func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
 	// Since deleting a feature state does not make sense, we do nothing
+	// TODO: maybe reset to the default feature values
 	resp.State.RemoveResource(ctx)
 	return
 

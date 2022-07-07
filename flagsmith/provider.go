@@ -99,7 +99,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 				Sensitive:           true,
 			},
 			"base_api_url": {
-				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version",
+				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version. e.g: https://your.flagsmith.com/api/v1",
 				Optional:            true,
 				Type:                types.StringType,
 			},
