@@ -15,8 +15,6 @@ Flagsmith feature/ Remote config associated with an environment
 ```terraform
 resource "flagsmith_flag" "feature_1_dev" {
   enabled         = true
-  environment     = 2
-  feature         = 14
   environment_key = "<environment_key>"
   feature_name    = "feature_1"
   feature_state_value = {
@@ -33,9 +31,7 @@ resource "flagsmith_flag" "feature_1_dev" {
 ### Required
 
 - `enabled` (Boolean) Used for enabling/disabling the feature
-- `environment` (Number) ID of the environment
 - `environment_key` (String) Client side environment key associated with the environment
-- `feature` (Number) ID of the feature
 - `feature_name` (String) Name of the feature
 
 ### Optional
@@ -44,6 +40,8 @@ resource "flagsmith_flag" "feature_1_dev" {
 
 ### Read-Only
 
+- `environment` (Number) ID of the environment
+- `feature` (Number) ID of the feature
 - `id` (Number) ID of the featurestate
 
 <a id="nestedatt--feature_state_value"></a>
