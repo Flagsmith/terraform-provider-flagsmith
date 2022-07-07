@@ -25,6 +25,7 @@ func TestAccExampleResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_flag.test_feature", "enabled", "true"),
 				),
 			},
+
 			// ImportState testing
 			{
 				ResourceName:      "flagsmith_flag.test_feature",
@@ -41,7 +42,6 @@ func TestAccExampleResource(t *testing.T) {
 				),
 			},
 			// Update testing
-
 			{
 				Config: testAccFlagResourceConfig("two", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -65,8 +65,6 @@ provider "flagsmith" {
 
 resource "flagsmith_flag" "test_feature" {
   enabled         = %t
-  environment     = %d
-  feature         = %d
   environment_key = "%s"
   feature_name    = "%s"
   feature_state_value = {
@@ -76,5 +74,5 @@ resource "flagsmith_flag" "test_feature" {
 
 }
 
-`, isEnabled, environmentID(), featureID(), environmentKey(), featureName(), featureStateValue)
+`, isEnabled, environmentKey(), featureName(), featureStateValue)
 }

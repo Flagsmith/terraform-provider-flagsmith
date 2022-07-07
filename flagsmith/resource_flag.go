@@ -51,19 +51,19 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 						Required:            true,
 					},
 					"string_value": {
-						Type:     types.StringType,
+						Type:                types.StringType,
 						MarkdownDescription: "String value of the feature if the type is `unicode`",
-						Optional: true,
+						Optional:            true,
 					},
 					"integer_value": {
-						Type:     types.NumberType,
+						Type:                types.NumberType,
 						MarkdownDescription: "Integer value of the feature if the type is `int`",
-						Optional: true,
+						Optional:            true,
 					},
 					"boolean_value": {
-						Type:     types.BoolType,
+						Type:                types.BoolType,
 						MarkdownDescription: "Boolean value of the feature if the type is `bool`",
-						Optional: true,
+						Optional:            true,
 					},
 				}),
 			},
@@ -75,13 +75,19 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 			},
 			"feature": {
 				MarkdownDescription: "ID of the feature",
-				Required:            true,
-				Type:                types.NumberType,
+				Computed:            true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					tfsdk.UseStateForUnknown(),
+				},
+				Type: types.NumberType,
 			},
 			"environment": {
 				MarkdownDescription: "ID of the environment",
-				Required:            true,
-				Type:                types.NumberType,
+				Computed:            true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					tfsdk.UseStateForUnknown(),
+				},
+				Type: types.NumberType,
 			},
 		},
 	}, nil
@@ -148,6 +154,7 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	var data FlagResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
+
 	// Early return if the state is wrong
 	if diags.HasError() {
 		return
@@ -157,10 +164,13 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 		panic(err)
 	}
 	resoureData := MakeFlagResourceDataFromClientFS(featureState)
+
 	resoureData.EnvironmentKey = data.EnvironmentKey
 	resoureData.FeatureName = data.FeatureName
+	tflog.Error(ctx, "Read resource state000000000000000000000000000000000000000000000000000000000000000000000000000000000")
 	elog := fmt.Sprintf("%+v", resoureData.FeatureStateValue)
 	tflog.Debug(ctx, elog)
+
 	diags = resp.State.Set(ctx, &resoureData)
 	if diags.HasError() {
 		// Log error from diags
@@ -194,7 +204,9 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 
 	// Generate API request body from plan
 	intFeatureStateID, _ := state.ID.Value.Int64()
-	clientFeatureState := plan.ToClientFS(intFeatureStateID)
+	intFeature, _ := state.Feature.Value.Int64()
+	intEnvironment, _ := state.Environment.Value.Int64()
+	clientFeatureState := plan.ToClientFS(intFeatureStateID, intFeature, intEnvironment)
 
 	updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
 

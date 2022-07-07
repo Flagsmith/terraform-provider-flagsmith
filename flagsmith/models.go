@@ -75,15 +75,13 @@ type FlagResourceData struct {
 	EnvironmentKey    types.String       `tfsdk:"environment_key"`
 }
 
-func (f *FlagResourceData) ToClientFS(featureStateID int64) *flagsmithapi.FeatureState {
-	intFeature, _ := f.Feature.Value.Int64()
-	intEnvironment, _ := f.Environment.Value.Int64()
+func (f *FlagResourceData) ToClientFS(featureStateID int64, feature int64, environment int64) *flagsmithapi.FeatureState {
 	return &flagsmithapi.FeatureState{
 		ID:                featureStateID,
 		Enabled:           f.Enabled.Value,
 		FeatureStateValue: f.FeatureStateValue.ToClientFSV(),
-		Feature:           intFeature,
-		Environment:       intEnvironment,
+		Feature:           feature,
+		Environment:       environment,
 	}
 }
 

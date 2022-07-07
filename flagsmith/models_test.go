@@ -161,10 +161,7 @@ func TestMakeFlagResourceDataFromClientFS(t *testing.T) {
 func TestFlagResourceDataToClientFS(t *testing.T) {
 	//Given
 	flagResourceData := FlagResourceData{
-		ID:          types.Number{Value: big.NewFloat(1)},
-		Enabled:     types.Bool{Value: true},
-		Feature:     types.Number{Value: big.NewFloat(1)},
-		Environment: types.Number{Value: big.NewFloat(1)},
+		Enabled: types.Bool{Value: true},
 		FeatureStateValue: &FeatureStateValue{
 			Type:         types.String{Value: "int"},
 			StringValue:  types.String{Null: true},
@@ -175,7 +172,9 @@ func TestFlagResourceDataToClientFS(t *testing.T) {
 
 	// When
 	featureStateID := int64(1)
-	clientFS := flagResourceData.ToClientFS(featureStateID)
+	environment := int64(1)
+	feture := int64(1)
+	clientFS := flagResourceData.ToClientFS(featureStateID, environment, feture)
 
 	// Then
 	assert.Equal(t, featureStateID, clientFS.ID)
