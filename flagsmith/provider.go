@@ -1,26 +1,26 @@
-package provider
+package flagsmith
 
 import (
 	"context"
 	"fmt"
+	"os"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const BaseAPIURL = "https://api.flagsmith.com/api/v1"
+
 // Ensure provider defined types fully satisfy framework interfaces
 var _ tfsdk.Provider = &provider{}
 
-// provider satisfies the tfsdk.Provider interface and usually is included
-// with all Resource and DataSource implementations.
 type provider struct {
-	// client can contain the upstream provider SDK or HTTP client used to
-	// communicate with the upstream service. Resource and DataSource
-	// implementations can then make calls using this client.
-	//
-	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
-	// client vendorsdk.ExampleClient
+	// client contains the upstream provider SDK used to
+	// communicate with the flagsmith api
+	client *flagsmithapi.Client
 
 	// configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
@@ -33,12 +33,14 @@ type provider struct {
 	version string
 }
 
-// providerData can be used to store data from the Terraform configuration.
+// providerData is used to store data from the Terraform configuration.
 type providerData struct {
-	Example types.String `tfsdk:"example"`
+	MasterAPIKey types.String `tfsdk:"master_api_key"`
+	BaseAPIURL   types.String `tfsdk:"base_api_url"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+
 	var data providerData
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -46,33 +48,58 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	var masterAPIKey string
+	if data.MasterAPIKey.Unknown {
+		resp.Diagnostics.AddError("Unable to find master_api_key", "Cannot use unknown value for master_api_key")
+		return
+	}
+	if data.MasterAPIKey.Null {
+		masterAPIKey = os.Getenv("FLAGSMITH_MASTER_API_KEY")
 
-	// Configuration values are now available.
-	// if data.Example.Null { /* ... */ }
+	} else {
+		masterAPIKey = data.MasterAPIKey.Value
+	}
+	if masterAPIKey == "" {
+		resp.Diagnostics.AddError("Unable to find master_api_key", "master_api_key cannot be an empty string")
+	}
 
-	// If the upstream provider SDK or HTTP client requires configuration, such
-	// as authentication or logging, this is a great opportunity to do so.
+	baseAPIURL := BaseAPIURL
+	if data.BaseAPIURL.Value != "" {
+		baseAPIURL = data.BaseAPIURL.Value
+
+	}
+
+	client := flagsmithapi.NewClient(masterAPIKey, baseAPIURL)
+	p.client = client
 
 	p.configured = true
+
+	return
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	return map[string]tfsdk.ResourceType{
-		"scaffolding_example": exampleResourceType{},
+		"flagsmith_flag": flagResourceType{},
 	}, nil
 }
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	return map[string]tfsdk.DataSourceType{
-		"scaffolding_example": exampleDataSourceType{},
-	}, nil
+	// Does not define any data source
+	return map[string]tfsdk.DataSourceType{}, nil
 }
 
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		MarkdownDescription: `The flagsmith provider is used to enable/disable and/or update flag values.`,
 		Attributes: map[string]tfsdk.Attribute{
-			"example": {
-				MarkdownDescription: "Example provider attribute",
+			"master_api_key": {
+				MarkdownDescription: "Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`",
+				Optional:            true,
+				Type:                types.StringType,
+				Sensitive:           true,
+			},
+			"base_api_url": {
+				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version. e.g: https://your.flagsmith.com/api/v1",
 				Optional:            true,
 				Type:                types.StringType,
 			},

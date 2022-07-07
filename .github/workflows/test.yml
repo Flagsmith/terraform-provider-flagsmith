@@ -1,13 +1,13 @@
 # Terraform Provider testing workflow.
 name: Tests
 
-# This GitHub action runs your tests for each pull request and push.
-# Optionally, you can turn it on using a schedule for regular testing.
 on:
   pull_request:
     paths-ignore:
       - 'README.md'
   push:
+    branches:
+      - main
     paths-ignore:
       - 'README.md'
 
@@ -19,11 +19,12 @@ permissions:
 env:
   # Go language version to use for building. This value should also be updated
   # in the release workflow if changed.
-  GO_VERSION: '1.17'
+  GO_VERSION: '1.18'
 
 jobs:
   # Ensure project builds before running testing matrix
   build:
+    if: github.event.pull_request.draft == false
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -36,6 +37,7 @@ jobs:
       - run: go build -v .
 
   generate:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
@@ -50,6 +52,7 @@ jobs:
 
   # Run acceptance tests in a matrix with Terraform CLI versions
   test:
+    if: github.event.pull_request.draft == false
     name: Terraform Provider Acceptance Tests
     needs: build
     runs-on: ubuntu-latest
@@ -72,6 +75,11 @@ jobs:
       - uses: actions/checkout@v3
       - run: go mod download
       - env:
+          FLAGSMITH_MASTER_API_KEY: ${{ secrets.FLAGSMITH_MASTER_API_KEY }}
+          FLAGSMITH_FEATURE_NAME: test_feature
+          FLAGSMITH_ENVIRONMENT_KEY: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}
+          FLAGSMITH_ENVIRONMENT_ID: 18143
+          FLAGSMITH_FEATURE_ID: 25142
           TF_ACC: "1"
-        run: go test -v -cover ./internal/provider/
+        run: go test -v -cover ./flagsmith/
         timeout-minutes: 10
