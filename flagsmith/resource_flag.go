@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"strings"
 )
@@ -227,7 +227,7 @@ func (r flagResource) ImportState(ctx context.Context, req tfsdk.ImportResourceS
 		)
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("environment_key"), importKey[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("feature_name"), importKey[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_key"), importKey[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("feature_name"), importKey[1])...)
 
 }
