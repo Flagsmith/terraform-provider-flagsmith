@@ -48,7 +48,7 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 					"type": {
 						Type:                types.StringType,
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
-						Required:            true,
+						Optional:            true,
 					},
 					"string_value": {
 						Type:                types.StringType,
