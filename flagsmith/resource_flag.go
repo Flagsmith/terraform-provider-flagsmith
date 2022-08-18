@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -12,9 +14,9 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ tfsdk.ResourceType = flagResourceType{}
-var _ tfsdk.Resource = flagResource{}
-var _ tfsdk.ResourceWithImportState = flagResource{}
+var _ provider.ResourceType = flagResourceType{}
+var _ resource.Resource = flagResource{}
+var _ resource.ResourceWithImportState = flagResource{}
 
 type flagResourceType struct{}
 
@@ -28,7 +30,7 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				Computed:            true,
 				MarkdownDescription: "ID of the featurestate",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.NumberType,
 			},
@@ -77,7 +79,7 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				MarkdownDescription: "ID of the feature",
 				Computed:            true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.NumberType,
 			},
@@ -85,7 +87,7 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 				MarkdownDescription: "ID of the environment",
 				Computed:            true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
-					tfsdk.UseStateForUnknown(),
+					resource.UseStateForUnknown(),
 				},
 				Type: types.NumberType,
 			},
@@ -94,10 +96,10 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 }
 
 type flagResource struct {
-	provider provider
+	provider fsProvider
 }
 
-func (t flagResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (t flagResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return flagResource{
@@ -105,7 +107,7 @@ func (t flagResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (t
 	}, diags
 }
 
-func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r flagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FlagResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -115,8 +117,8 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 		return
 	}
 	// Read and load the state of the object
-	readResponse := tfsdk.ReadResourceResponse{State: resp.State}
-	r.Read(ctx, tfsdk.ReadResourceRequest{
+	readResponse := resource.ReadResponse{State: resp.State}
+	r.Read(ctx, resource.ReadRequest{
 		State: tfsdk.State{
 			Raw:    req.Plan.Raw,
 			Schema: req.Plan.Schema,
@@ -131,8 +133,8 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	}
 
 	//Now call update to update the state
-	updateResponse := tfsdk.UpdateResourceResponse{State: resp.State}
-	r.Update(ctx, tfsdk.UpdateResourceRequest{
+	updateResponse := resource.UpdateResponse{State: resp.State}
+	r.Update(ctx, resource.UpdateRequest{
 		Config:       req.Config,
 		Plan:         req.Plan,
 		State:        readResponse.State,
@@ -149,7 +151,7 @@ func (r flagResource) Create(ctx context.Context, req tfsdk.CreateResourceReques
 	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
 }
-func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
+func (r flagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data FlagResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -171,7 +173,7 @@ func (r flagResource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r flagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
 	var plan FlagResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -210,7 +212,7 @@ func (r flagResource) Update(ctx context.Context, req tfsdk.UpdateResourceReques
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r flagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Since deleting a feature state does not make sense, we do nothing
 	// TODO: maybe reset to the default feature values
 	resp.State.RemoveResource(ctx)
@@ -218,7 +220,7 @@ func (r flagResource) Delete(ctx context.Context, req tfsdk.DeleteResourceReques
 
 }
 
-func (r flagResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
+func (r flagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
 	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(
