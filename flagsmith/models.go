@@ -96,3 +96,27 @@ func MakeFlagResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FlagR
 		Environment:       types.Number{Value: big.NewFloat(float64(clientFS.Environment))},
 	}
 }
+
+type MultivariateOption struct {
+	Type                        types.String `tfsdk:"type"`
+	ID                          types.Number `tfsdk:"id"`
+	IntegerValue                types.Number `tfsdk:"integer_value"`
+	StringValue                 types.String `tfsdk:"string_value"`
+	BooleanValue                types.Bool   `tfsdk:"boolean_value"`
+	DefaultPercentageAllocation types.Number `tfsdk:"default_percentage_allocation"`
+}
+
+type FeatureResourceData struct {
+	ID             types.Number   `tfsdk:"id"`
+	FeatureUUID   types.String   `tfsdk:"feature_uuid"`
+	Name           types.String   `tfsdk:"name"`
+	Type           types.String   `tfsdk:"type"`
+	Description    types.String   `tfsdk:"description"`
+	InitialValue   types.String   `tfsdk:"initial_value"`
+	DefaultEnabled types.Bool     `tfsdk:"default_enabled"`
+	IsArchived     types.Bool     `tfsdk:"is_archived"`
+	Owners         []types.Number `tfsdk:"owners"`
+	MultivariateOptions *[]MultivariateOption `tfsdk:"multivariate_options"`
+	ProjectID      types.Number   `tfsdk:"project_id"`
+	ProjectUUID   types.String   `tfsdk:"project_uuid"`
+}
