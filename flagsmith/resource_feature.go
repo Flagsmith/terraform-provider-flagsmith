@@ -3,12 +3,14 @@ package flagsmith
 import (
 	"context"
 	"fmt"
+	"github.com/Flagsmith/terraform-provider-flagsmith/internal/pkg"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"strings"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -17,8 +19,6 @@ var _ resource.Resource = featureResource{}
 var _ resource.ResourceWithImportState = featureResource{}
 
 type featureResourceType struct{}
-
-
 
 func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
@@ -34,6 +34,14 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				},
 				Type: types.NumberType,
 			},
+			"uuid": {
+				Computed:            true,
+				MarkdownDescription: "UUID of the feature",
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
+				Type: types.StringType,
+			},
 			"project_id": {
 				Computed:            true,
 				MarkdownDescription: "ID of the project",
@@ -47,15 +55,28 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				MarkdownDescription: "Name of the feature",
 				Type:                types.StringType,
 			},
+			"type": {
+				Required:            true,
+				MarkdownDescription: "Type of the feature, can be STANDARD, or MULTIVARIATE",
+				Type:                types.StringType,
+			},
 			"default_enabled": {
-				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Determines if the feature is enabled by default",
 				Type:                types.BoolType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+					planmodifier.BoolDefaultModifier{Default: false},
+
+				},
 			},
 			"initial_value": {
-				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Determines the initial value of the feature",
 				Type:                types.StringType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
 			},
 			"description": {
 				Optional:            true,
@@ -63,10 +84,21 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Type:                types.StringType,
 			},
 			"is_archived": {
-				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Can be used to archive/unarchive a feature",
 				Type:                types.BoolType,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+					planmodifier.BoolDefaultModifier{Default: false},
+
+				},
 			},
+			"owners": {
+				Optional:            true,
+				Type:                types.SetType{ElemType: types.NumberType},
+				MarkdownDescription: "List of user IDs that are owners of the feature",
+			},
+
 			"multivariate_options": {
 				Optional: true,
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
@@ -111,7 +143,7 @@ type featureResource struct {
 	provider fsProvider
 }
 
-func (t featureResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
+func (t featureResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
 	return featureResource{
@@ -120,7 +152,7 @@ func (t featureResourceType) NewResource(ctx context.Context, in provider.Provid
 }
 
 func (r featureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data FlagResourceData
+	var data FeatureResourceData
 
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -128,40 +160,19 @@ func (r featureResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Read and load the state of the object
-	readResponse := resource.ReadResponse{State: resp.State}
-	r.Read(ctx, resource.ReadRequest{
-		State: tfsdk.State{
-			Raw:    req.Plan.Raw,
-			Schema: req.Plan.Schema,
-		},
-		ProviderMeta: req.ProviderMeta,
-	}, &readResponse)
+	clientFeature := data.ToClientFeature()
 
-	if readResponse.Diagnostics.HasError() {
-		resp.Diagnostics.Append(readResponse.Diagnostics...)
-		tflog.Error(ctx, "Create: Error reading resource state")
+	// Create the feature
+	err := r.provider.client.CreateFeature(clientFeature)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature, got error: %s", err))
 		return
 	}
+	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
-	//Now call update to update the state
-	updateResponse := resource.UpdateResponse{State: resp.State}
-	r.Update(ctx, resource.UpdateRequest{
-		Config:       req.Config,
-		Plan:         req.Plan,
-		State:        readResponse.State,
-		ProviderMeta: req.ProviderMeta,
-	}, &updateResponse)
-
-	if updateResponse.Diagnostics.HasError() {
-		resp.Diagnostics.Append(updateResponse.Diagnostics...)
-		tflog.Error(ctx, "Create: Error updating resource state")
-		return
-	}
-
-	resp.State = updateResponse.State
-	resp.Diagnostics.Append(updateResponse.Diagnostics...)
-
+	diags = resp.State.Set(ctx, &resourceData)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r featureResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -174,79 +185,77 @@ func (r featureResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	feature, err := r.provider.client.GetFeature(data.EnvironmentKey.Value, data.FeatureName.Value)
+	feature, err := r.provider.client.GetFeature(data.UUID.Value)
 	if err != nil {
 		panic(err)
 	}
-	resourceData := MakeFlagResourceDataFromClientFS(featureState)
-
-	resourceData.EnvironmentKey = data.EnvironmentKey
-	resourceData.FeatureName = data.FeatureName
+	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
+
 }
 
+func (r featureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	//Get plan values
+	var plan FeatureResourceData
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 
-func (r featureResource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
-	// Get plan values
-	//	var plan FeatureResourceData
-	// diags := req.Plan.Get(ctx, &plan)
-	// resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Update: Error reading plan data")
+		return
+	}
 
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
+	// Get current state
+	var state FeatureResourceData
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 
-	// // Get current state
-	// var state FlagResourceData
-	// diags = req.State.Get(ctx, &state)
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Update: Error reading state data")
+		return
+	}
+	// Generate API request body from plan
+	clientFeature := plan.ToClientFeature()
 
-	// // Generate API request body from plan
-	// intFeatureStateID, _ := state.ID.Value.Int64()
-	// intFeature, _ := state.Feature.Value.Int64()
-	// intEnvironment, _ := state.Environment.Value.Int64()
-	// clientFeatureState := plan.ToClientFS(intFeatureStateID, intFeature, intEnvironment)
+	err := r.provider.client.UpdateFeature(clientFeature)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature, got error: %s", err))
+		return
+	}
 
-	// updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
-
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
-	// 	return
-	// }
-	// resourceData := MakeFlagResourceDataFromClientFS(updatedClientFS)
-	// resourceData.EnvironmentKey = plan.EnvironmentKey
-	// resourceData.FeatureName = plan.FeatureName
+	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
 	// Update the state with the new values
-	// diags = resp.State.Set(ctx, &resourceData)
-	// resp.Diagnostics.Append(diags...)
+	diags = resp.State.Set(ctx, &resourceData)
+
+	resp.Diagnostics.Append(diags...)
 
 }
 
-func (r featureResource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
-	// Since deleting a feature state does not make sense, we do nothing
-	// TODO: maybe reset to the default feature values
-	// resp.State.RemoveResource(ctx)
-	// return
+func (r featureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Get current state
+	var state FeatureResourceData
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Delete: Error reading state data")
+		return
+	}
+	// Generate API request body from plan
+	clientFeature := state.ToClientFeature()
+
+
+	err := r.provider.client.DeleteFeature(*clientFeature.ProjectID, *clientFeature.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature, got error: %s", err))
+		return
+	}
+	resp.State.RemoveResource(ctx)
 
 }
-
-func (r featureResource) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	// importKey := strings.Split(req.ID, ",")
-	// if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
-	// 	resp.Diagnostics.AddError(
-	// 		"Unexpected Import Identifier",
-	// 		fmt.Sprintf("Expected import identifier with format: environment,feature_name Got: %q", req.ID),
-	// 	)
-	// 	return
-	// }
-	// resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_key"), importKey[0])...)
-	// resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("feature_name"), importKey[1])...)
-
+func (r featureResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("uuid"), req, resp)
 }

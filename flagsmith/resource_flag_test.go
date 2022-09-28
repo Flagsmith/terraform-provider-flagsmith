@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAccExampleResource(t *testing.T) {
+func TestAccFlagResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
