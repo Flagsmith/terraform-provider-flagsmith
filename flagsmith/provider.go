@@ -81,6 +81,7 @@ func (p *fsProvider) Configure(ctx context.Context, req provider.ConfigureReques
 func (p *fsProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	return map[string]provider.ResourceType{
 		"flagsmith_flag": flagResourceType{},
+		"flagsmith_feature": featureResourceType{},
 	}, nil
 }
 
