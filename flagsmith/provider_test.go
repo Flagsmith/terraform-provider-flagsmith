@@ -22,7 +22,6 @@ func testAccPreCheck(t *testing.T) {
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_ID")
 	mustHaveEnv(t, "FLAGSMITH_FEATURE_ID")
 	mustHaveEnv(t, "FLAGSMITH_PROJECT_UUID")
-	mustHaveEnv(t, "FLAGSMITH_FEATURE_UUID")
 }
 
 func mustHaveEnv(t *testing.T, name string) {
@@ -36,9 +35,6 @@ func masterAPIKey() string {
 }
 func featureName() string {
 	return os.Getenv("FLAGSMITH_FEATURE_NAME")
-}
-func featureUUID() string {
-	return os.Getenv("FLAGSMITH_FEATURE_UUID")
 }
 func projectUUID() string {
 	return os.Getenv("FLAGSMITH_PROJECT_UUID")
