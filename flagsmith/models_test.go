@@ -126,7 +126,7 @@ func TestMakeBooleanFeatureStateValueFromClientFSV(t *testing.T) {
 
 }
 
-func TestMakeFlagResourceDataFromClientFS(t *testing.T) {
+func TestMakeFeatureStateResourceDataFromClientFS(t *testing.T) {
 	// Given
 	intValue := int64(1)
 	isEnabled := true
@@ -144,23 +144,23 @@ func TestMakeFlagResourceDataFromClientFS(t *testing.T) {
 		Environment:       int64(1),
 	}
 	// When
-	flagResourceData := MakeFlagResourceDataFromClientFS(&clientFS)
+	featureStateResourceData := MakeFeatureStateResourceDataFromClientFS(&clientFS)
 
 	// Then
-	assert.Equal(t, big.NewFloat(1), flagResourceData.ID.Value)
-	assert.Equal(t, isEnabled, flagResourceData.Enabled.Value)
-	assert.Equal(t, big.NewFloat(1), flagResourceData.Feature.Value)
-	assert.Equal(t, big.NewFloat(1), flagResourceData.Environment.Value)
-	assert.Equal(t, "int", flagResourceData.FeatureStateValue.Type.Value)
-	assert.Equal(t, big.NewFloat(float64(intValue)), flagResourceData.FeatureStateValue.IntegerValue.Value)
-	assert.Equal(t, true, flagResourceData.FeatureStateValue.StringValue.Null)
-	assert.Equal(t, true, flagResourceData.FeatureStateValue.BooleanValue.Null)
+	assert.Equal(t, big.NewFloat(1), featureStateResourceData.ID.Value)
+	assert.Equal(t, isEnabled, featureStateResourceData.Enabled.Value)
+	assert.Equal(t, big.NewFloat(1), featureStateResourceData.Feature.Value)
+	assert.Equal(t, big.NewFloat(1), featureStateResourceData.Environment.Value)
+	assert.Equal(t, "int", featureStateResourceData.FeatureStateValue.Type.Value)
+	assert.Equal(t, big.NewFloat(float64(intValue)), featureStateResourceData.FeatureStateValue.IntegerValue.Value)
+	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.StringValue.Null)
+	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.BooleanValue.Null)
 
 }
 
-func TestFlagResourceDataToClientFS(t *testing.T) {
+func TestFeatureStateResourceDataToClientFS(t *testing.T) {
 	//Given
-	flagResourceData := FlagResourceData{
+	featureStateResourceData := FeatureStateResourceData{
 		Enabled: types.Bool{Value: true},
 		FeatureStateValue: &FeatureStateValue{
 			Type:         types.String{Value: "int"},
@@ -174,7 +174,7 @@ func TestFlagResourceDataToClientFS(t *testing.T) {
 	featureStateID := int64(1)
 	environment := int64(1)
 	feture := int64(1)
-	clientFS := flagResourceData.ToClientFS(featureStateID, environment, feture)
+	clientFS := featureStateResourceData.ToClientFS(featureStateID, environment, feture)
 
 	// Then
 	assert.Equal(t, featureStateID, clientFS.ID)

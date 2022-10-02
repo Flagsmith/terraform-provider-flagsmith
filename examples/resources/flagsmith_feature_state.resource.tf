@@ -1,4 +1,4 @@
-resource "flagsmith_flag" "feature_1_dev" {
+resource "flagsmith_feature_state" "feature_1_dev" {
   enabled         = true
   environment_key = "<environment_key>"
   feature_name    = "feature_1"

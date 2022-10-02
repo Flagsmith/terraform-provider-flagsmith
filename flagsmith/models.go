@@ -65,7 +65,7 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 	return FeatureStateValue{}
 }
 
-type FlagResourceData struct {
+type FeatureStateResourceData struct {
 	ID                types.Number       `tfsdk:"id"`
 	Enabled           types.Bool         `tfsdk:"enabled"`
 	FeatureStateValue *FeatureStateValue `tfsdk:"feature_state_value"`
@@ -75,7 +75,7 @@ type FlagResourceData struct {
 	EnvironmentKey    types.String       `tfsdk:"environment_key"`
 }
 
-func (f *FlagResourceData) ToClientFS(featureStateID int64, feature int64, environment int64) *flagsmithapi.FeatureState {
+func (f *FeatureStateResourceData) ToClientFS(featureStateID int64, feature int64, environment int64) *flagsmithapi.FeatureState {
 	return &flagsmithapi.FeatureState{
 		ID:                featureStateID,
 		Enabled:           f.Enabled.Value,
@@ -85,10 +85,10 @@ func (f *FlagResourceData) ToClientFS(featureStateID int64, feature int64, envir
 	}
 }
 
-// Generate a new FlagResourceData from client `FeatureState`
-func MakeFlagResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FlagResourceData {
+// Generate a new FeatureStateResourceData from client `FeatureState`
+func MakeFeatureStateResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FeatureStateResourceData {
 	fsValue := MakeFeatureStateValueFromClientFSV(clientFS.FeatureStateValue)
-	return FlagResourceData{
+	return FeatureStateResourceData{
 		ID:                types.Number{Value: big.NewFloat(float64(clientFS.ID))},
 		Enabled:           types.Bool{Value: clientFS.Enabled},
 		FeatureStateValue: &fsValue,
