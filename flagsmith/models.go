@@ -2,9 +2,9 @@ package flagsmith
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	flagsmithapi "github.com/Flagsmith/flagsmith-go-api-client"
 	"math/big"
+	"sort"
 )
 
 type FeatureStateValue struct {
@@ -107,17 +107,28 @@ type MultivariateOption struct {
 }
 
 func (m *MultivariateOption) ToClientMultivariateOption() *flagsmithapi.MultivariateOption {
-	moID, _ := m.ID.Value.Int64()
-	integerValue, _ := m.IntegerValue.Value.Int64()
 	defaultPercentageAllocation, _ := m.DefaultPercentageAllocation.Value.Float64()
-	return &flagsmithapi.MultivariateOption{
-		ID:                          &moID,
+	stringValue := m.StringValue.Value
+	booleanValue := m.BooleanValue.Value
+
+	mo := flagsmithapi.MultivariateOption{
 		Type:                        m.Type.Value,
-		IntegerValue:                &integerValue,
-		StringValue:                 &m.StringValue.Value,
-		BooleanValue:                &m.BooleanValue.Value,
 		DefaultPercentageAllocation: defaultPercentageAllocation,
 	}
+	if m.ID.Value != nil {
+		moID, _ := m.ID.Value.Int64()
+		mo.ID = &moID
+	}
+	if m.IntegerValue.Value != nil {
+		moIntegerValue, _ := m.IntegerValue.Value.Int64()
+		mo.IntegerValue = &moIntegerValue
+	} else if m.StringValue.Null == false {
+		mo.StringValue = &stringValue
+	} else if m.BooleanValue.Null == false {
+		mo.BooleanValue = &booleanValue
+	}
+
+	return &mo
 }
 
 type FeatureResourceData struct {
@@ -136,9 +147,6 @@ type FeatureResourceData struct {
 }
 
 func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
-	//featureID, _ := f.ID.Value.Int64()
-	//projectID, _ := f.ProjectID.Value.Int64()
-
 	feature := flagsmithapi.Feature{
 		UUID:           f.UUID.Value,
 		Name:           f.Name.Value,
@@ -166,9 +174,11 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		}
 	}
 	if f.MultivariateOptions != nil {
+		mvOptions := []flagsmithapi.MultivariateOption{}
 		for _, mo := range *f.MultivariateOptions {
-			*feature.MultivariateOptions = append(*feature.MultivariateOptions, *mo.ToClientMultivariateOption())
+			mvOptions = append(mvOptions, *mo.ToClientMultivariateOption())
 		}
+		feature.MultivariateOptions = &mvOptions
 	}
 	return &feature
 
@@ -176,16 +186,21 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 
 func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Feature) FeatureResourceData {
 	var multivariateOptions []MultivariateOption
+	// Sort the multivariate options by ID to ensure state stays consistent
+	sort.Slice(*clientFeature.MultivariateOptions, func(i, j int) bool {
+		iID := (*clientFeature.MultivariateOptions)[i].ID
+		jID := (*clientFeature.MultivariateOptions)[j].ID
+		return *iID < *jID
+	})
 	for _, option := range *clientFeature.MultivariateOptions {
-		//multivariateOptions = append(multivariateOptions, MultivariateOption)
 		mvOption := MultivariateOption{
-				Type:                        types.String{Value: option.Type},
-				ID:                          types.Number{Value: big.NewFloat(float64(*option.ID))},
-				//	IntegerValue:                types.Number{Value: big.NewFloat(float64(*option.IntegerValue))},
-				//	StringValue:                 types.String{Value: *option.StringValue},
-				//BooleanValue:                types.Bool{Value: *option.BooleanValue},
-				DefaultPercentageAllocation: types.Number{Value: big.NewFloat(option.DefaultPercentageAllocation)},
-			}
+			Type: types.String{Value: option.Type},
+			ID:   types.Number{Value: big.NewFloat(float64(*option.ID))},
+			IntegerValue:                types.Number{Null: true},
+			StringValue:                 types.String{Null: true},
+			BooleanValue: 	      types.Bool{Null: true},
+			DefaultPercentageAllocation: types.Number{Value: big.NewFloat(option.DefaultPercentageAllocation)},
+		}
 		if option.IntegerValue != nil {
 			mvOption.IntegerValue = types.Number{Value: big.NewFloat(float64(*option.IntegerValue))}
 		}
@@ -193,7 +208,6 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		if option.StringValue != nil {
 			mvOption.StringValue = types.String{Value: *option.StringValue}
 		}
-
 		if option.BooleanValue != nil {
 			mvOption.BooleanValue = types.Bool{Value: *option.BooleanValue}
 		}

@@ -61,18 +61,19 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Type:                types.StringType,
 			},
 			"default_enabled": {
+				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "Determines if the feature is enabled by default",
+				MarkdownDescription: "Determines if the feature is enabled by default. If unspecified, it will default to false",
 				Type:                types.BoolType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 					planmodifier.BoolDefaultModifier{Default: false},
-
 				},
 			},
 			"initial_value": {
 				Computed:            true,
-				MarkdownDescription: "Determines the initial value of the feature",
+				Optional:            true,
+				MarkdownDescription: "Determines the initial value of the feature.",
 				Type:                types.StringType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
@@ -85,27 +86,35 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 			},
 			"is_archived": {
 				Computed:            true,
-				MarkdownDescription: "Can be used to archive/unarchive a feature",
+				Optional:            true,
+				MarkdownDescription: "Can be used to archive/unarchive a feature. If unspecified, it will default to false",
 				Type:                types.BoolType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 					planmodifier.BoolDefaultModifier{Default: false},
-
 				},
 			},
 			"owners": {
 				Optional:            true,
 				Type:                types.SetType{ElemType: types.NumberType},
-				MarkdownDescription: "List of user IDs that are owners of the feature",
+				MarkdownDescription: "List of user IDs who are owners of the feature",
 			},
 
 			"multivariate_options": {
 				Optional: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
+					"id": {
+						Computed:            true,
+						MarkdownDescription: "ID of the Multivariate option",
+						PlanModifiers: tfsdk.AttributePlanModifiers{
+							resource.UseStateForUnknown(),
+						},
+						Type: types.NumberType,
+					},
 					"type": {
 						Type:                types.StringType,
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
-						Optional:            true,
+						Required:            true,
 					},
 					"string_value": {
 						Type:                types.StringType,
@@ -125,7 +134,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 					"default_percentage_allocation": {
 						Type:                types.NumberType,
 						MarkdownDescription: "Percentage allocation of the current multivariate option",
-						Optional:            true,
+						Required:            true,
 					},
 				}),
 			},
@@ -246,7 +255,6 @@ func (r featureResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 	// Generate API request body from plan
 	clientFeature := state.ToClientFeature()
-
 
 	err := r.provider.client.DeleteFeature(*clientFeature.ProjectID, *clientFeature.ID)
 	if err != nil {
