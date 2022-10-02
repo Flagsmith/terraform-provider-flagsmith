@@ -3,12 +3,14 @@
 page_title: "flagsmith Provider"
 subcategory: ""
 description: |-
-  The flagsmith provider is used to enable/disable and/or update flag values.
+  The flagsmith provider is used  to interact with the resource supported by Flagsmith.
+                        The provider needs to be configured with the proper credentials before it can be used.
 ---
 
 # flagsmith Provider
 
-The flagsmith provider is used to enable/disable and/or update flag values.
+The flagsmith provider is used  to interact with the resource supported by Flagsmith.
+				      The provider needs to be configured with the proper credentials before it can be used.
 
 ## Example Usage
 
