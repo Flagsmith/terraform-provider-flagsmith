@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
 func TestAccFeatureResource(t *testing.T) {
-	featureName := "resource_test_feature"
+	featureName :=  acctest.RandString(16)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -63,7 +65,8 @@ func TestAccFeatureResource(t *testing.T) {
 }
 
 func TestAccMVFeatureResouce(t *testing.T) {
-	featureName := "resource_test_feature_mv"
+	featureName :=  acctest.RandString(16)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -302,30 +305,3 @@ resource "flagsmith_feature" "test_feature" {
 `, featureName, description, projectUUID(), boolPercentageAllocation)
 }
 
-func testCheckMvOptionsAttr(n string, boolPercentageAllocation int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-		fmt.Println(rs.Primary.Attributes)
-		mvOptions := rs.Primary.Attributes["multivariate_options.#"]
-		if mvOptions == "" {
-			return fmt.Errorf("no multivariate_options is set")
-		}
-		fmt.Println(mvOptions)
-		// loop over mvoptions
-
-		for _, mvOption := range mvOptions {
-			fmt.Println(mvOption)
-			// 	if mvOption["boolean_value"] == "true" {
-			// 		if mvOption["default_percentage_allocation"] != boolPercentageAllocation {
-			// 			return fmt.Errorf("boolean_value default_percentage_allocation is not set to %d", boolPercentageAllocation)
-			// 		}
-			// 	}
-			// }
-
-		}
-		return nil
-	}
-}
