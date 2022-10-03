@@ -8,13 +8,12 @@ import (
 	"testing"
 )
 
-
 func TestAccFeatureResource(t *testing.T) {
 	featureName := "resource_test_feature"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy: testAccCheckFeatureResourceDestroy,
+		CheckDestroy:             testAccCheckFeatureResourceDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -23,12 +22,12 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "new feature description"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
 				),
 			},
 
@@ -41,13 +40,12 @@ func TestAccFeatureResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
-
 				),
 			},
 
@@ -58,21 +56,18 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "feature description updated"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
-
 				),
 			},
-
 		},
 	})
 }
-
 
 func TestAccMVFeatureResouce(t *testing.T) {
 	featureName := "resource_test_feature_mv"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy: testAccCheckFeatureResourceDestroy,
+		CheckDestroy:             testAccCheckFeatureResourceDestroy,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -81,12 +76,41 @@ func TestAccMVFeatureResouce(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "new feature description"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
+
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.#", "3"),
+
+					// Mv value 0
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.string_value", "option_value_10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.type", "unicode"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.0.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.integer_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.boolean_value"),
+
+					// Mv value 1
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.integer_value", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.type", "int"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.1.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.boolean_value"),
+
+					// Mv value 2
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.boolean_value", "true"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.type", "bool"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.2.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.integer_value"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
 				),
 			},
 
@@ -97,15 +121,45 @@ func TestAccMVFeatureResouce(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateIdFunc: getFeatureImportID("flagsmith_feature.test_feature"),
 				Check: resource.ComposeAggregateTestCheckFunc(
+
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "new feature description"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
+
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.#", "3"),
+
+					// Mv value 0
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.string_value", "option_value_10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.type", "unicode"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.0.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.integer_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.boolean_value"),
+
+					// Mv value 1
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.integer_value", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.type", "int"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.1.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.boolean_value"),
+
+					// Mv value 2
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.boolean_value", "true"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.type", "bool"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.2.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.integer_value"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
-					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
-
 				),
 			},
 
@@ -113,13 +167,47 @@ func TestAccMVFeatureResouce(t *testing.T) {
 			{
 				Config: testAccMVFeatureResourceConfig(featureName, "feature description updated", 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
+
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "feature description updated"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
 
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.#", "3"),
+
+					// Mv value 0
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.string_value", "option_value_10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.type", "unicode"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.0.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.integer_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.0.boolean_value"),
+
+					// Mv value 1
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.default_percentage_allocation", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.integer_value", "10"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.type", "int"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.1.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.1.boolean_value"),
+
+					// Mv value 2
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.default_percentage_allocation", "60"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.boolean_value", "true"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.type", "bool"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "multivariate_options.2.id"),
+
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.string_value"),
+					resource.TestCheckNoResourceAttr("flagsmith_feature.test_feature", "multivariate_options.2.integer_value"),
+
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
 				),
 			},
-
 		},
 	})
 }
@@ -132,7 +220,6 @@ func getFeatureImportID(n string) resource.ImportStateIdFunc {
 
 func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
 	return testAccFeatureDestroy("flagsmith_feature.test_feature")(s)
-
 
 }
 
@@ -166,8 +253,6 @@ func testAccFeatureDestroy(n string) resource.TestCheckFunc {
 	}
 }
 
-
-
 func testAccFeatureResourceConfig(featureName, description string) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
@@ -181,10 +266,8 @@ resource "flagsmith_feature" "test_feature" {
   type = "STANDARD"
 }
 
-`,  featureName, description, projectUUID())
+`, featureName, description, projectUUID())
 }
-
-
 
 func testAccMVFeatureResourceConfig(featureName, description string, boolPercentageAllocation int) string {
 	return fmt.Sprintf(`
@@ -216,5 +299,33 @@ resource "flagsmith_feature" "test_feature" {
   ]
 }
 
-`,  featureName, description, projectUUID(), boolPercentageAllocation)
+`, featureName, description, projectUUID(), boolPercentageAllocation)
+}
+
+func testCheckMvOptionsAttr(n string, boolPercentageAllocation int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+		fmt.Println(rs.Primary.Attributes)
+		mvOptions := rs.Primary.Attributes["multivariate_options.#"]
+		if mvOptions == "" {
+			return fmt.Errorf("no multivariate_options is set")
+		}
+		fmt.Println(mvOptions)
+		// loop over mvoptions
+
+		for _, mvOption := range mvOptions {
+			fmt.Println(mvOption)
+			// 	if mvOption["boolean_value"] == "true" {
+			// 		if mvOption["default_percentage_allocation"] != boolPercentageAllocation {
+			// 			return fmt.Errorf("boolean_value default_percentage_allocation is not set to %d", boolPercentageAllocation)
+			// 		}
+			// 	}
+			// }
+
+		}
+		return nil
+	}
 }

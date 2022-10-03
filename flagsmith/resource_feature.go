@@ -3,7 +3,6 @@ package flagsmith
 import (
 	"context"
 	"fmt"
-	"github.com/Flagsmith/terraform-provider-flagsmith/internal/pkg"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -67,7 +66,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Type:                types.BoolType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
-					planmodifier.BoolDefaultModifier{Default: false},
+					BoolDefaultModifier{Default: false},
 				},
 			},
 			"initial_value": {
@@ -91,7 +90,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Type:                types.BoolType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
-					planmodifier.BoolDefaultModifier{Default: false},
+					BoolDefaultModifier{Default: false},
 				},
 			},
 			"owners": {
