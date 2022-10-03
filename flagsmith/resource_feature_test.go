@@ -172,7 +172,6 @@ func testAccFeatureResourceConfig(featureName, description string) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
-  base_api_url   = "http://localhost:8000/api/v1"
 }
 
 resource "flagsmith_feature" "test_feature" {
@@ -191,7 +190,6 @@ func testAccMVFeatureResourceConfig(featureName, description string, boolPercent
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
-  base_api_url   = "http://localhost:8000/api/v1"
 }
 
 resource "flagsmith_feature" "test_feature" {

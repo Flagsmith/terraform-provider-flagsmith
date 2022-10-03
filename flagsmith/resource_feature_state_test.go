@@ -61,7 +61,6 @@ func testAccFlagResourceConfig(featureStateValue string, isEnabled bool) string 
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
-  base_api_url   = "http://localhost:8000/api/v1"
 }
 
 resource "flagsmith_feature_state" "test_feature" {
