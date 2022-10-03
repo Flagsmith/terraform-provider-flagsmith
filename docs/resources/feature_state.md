@@ -3,12 +3,12 @@
 page_title: "flagsmith_feature_state Resource - terraform-provider-flagsmith"
 subcategory: ""
 description: |-
-  Flagsmith Feature state/ Remote config associated with an environment
+  Flagsmith Feature state/ Remote config value associated with an environment
 ---
 
 # flagsmith_feature_state (Resource)
 
-Flagsmith Feature state/ Remote config associated with an environment
+Flagsmith Feature state/ Remote config value associated with an environment
 
 ## Example Usage
 

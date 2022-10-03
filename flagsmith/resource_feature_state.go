@@ -23,7 +23,7 @@ type featureStateResourceType struct{}
 func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith Feature state/ Remote config associated with an environment",
+		MarkdownDescription: "Flagsmith Feature state/ Remote config value associated with an environment",
 
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
