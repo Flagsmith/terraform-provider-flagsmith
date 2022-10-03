@@ -80,6 +80,7 @@ jobs:
           FLAGSMITH_ENVIRONMENT_KEY: ${{ secrets.FLAGSMITH_ENVIRONMENT_KEY }}
           FLAGSMITH_ENVIRONMENT_ID: 18143
           FLAGSMITH_FEATURE_ID: 25142
+          FLAGSMITH_PROJECT_UUID: 97907de4-66d4-4d78-aae3-04f5a4518a55
           TF_ACC: "1"
         run: go test -v -cover ./flagsmith/
         timeout-minutes: 10
