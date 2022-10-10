@@ -45,22 +45,22 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 
 			"type": {
 				Type:                types.StringType,
-				MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
+				MarkdownDescription: "Type of the multivariate option can be `unicode`, `int` or `bool`",
 				Required:            true,
 			},
 			"string_value": {
 				Type:                types.StringType,
-				MarkdownDescription: "String value of the feature if the type is `unicode`",
+				MarkdownDescription: "String value of the multivariate option if the type is `unicode`",
 				Optional:            true,
 			},
 			"integer_value": {
 				Type:                types.NumberType,
-				MarkdownDescription: "Integer value of the feature if the type is `int`",
+				MarkdownDescription: "Integer value of the multivariate option if the type is `int`",
 				Optional:            true,
 			},
 			"boolean_value": {
 				Type:                types.BoolType,
-				MarkdownDescription: "Boolean value of the feature if the type is `bool`",
+				MarkdownDescription: "Boolean value of the multivariate option if the type is `bool`",
 				Optional:            true,
 			},
 			"default_percentage_allocation": {
@@ -70,7 +70,7 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 			},
 			"feature_id": {
 				Computed:            true,
-				MarkdownDescription: "ID of the feature this multivariate option belongs to",
+				MarkdownDescription: "ID of the feature to which the multivariate option belongs",
 				Type:                types.NumberType,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
@@ -83,7 +83,7 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 			},
 			"project_id": {
 				Computed: 	  true,
-				MarkdownDescription: "ID of the project to which the multivariate option belongs",
+				MarkdownDescription: "Project ID of the feature to which the multivariate option belongs",
 				Type:                types.NumberType,
 			},
 		},
@@ -104,7 +104,6 @@ func (t multivariateResourceType) NewResource(ctx context.Context, in provider.P
 
 
 func (r multivariateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	var data MultivariateOptionResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -131,7 +130,6 @@ func (r multivariateResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r multivariateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Error(ctx, "wtf############################################################################################")
 	var data MultivariateOptionResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -215,7 +213,7 @@ func (r multivariateResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.provider.client.DeleteFeatureMVOption(*mvOption.ProjectID, *mvOption.FeatureID, mvOption.ID)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature multivariate option, got error: %s", err))
 		return
 	}
 	resp.State.RemoveResource(ctx)
