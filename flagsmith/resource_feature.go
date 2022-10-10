@@ -98,46 +98,6 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Type:                types.SetType{ElemType: types.NumberType},
 				MarkdownDescription: "List of user IDs who are owners of the feature",
 			},
-
-			"multivariate_options": {
-				Optional: true,
-				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-					"id": {
-						Computed:            true,
-						MarkdownDescription: "ID of the Multivariate option",
-						PlanModifiers: tfsdk.AttributePlanModifiers{
-							resource.UseStateForUnknown(),
-						},
-						Type: types.NumberType,
-					},
-					"type": {
-						Type:                types.StringType,
-						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
-						Required:            true,
-					},
-					"string_value": {
-						Type:                types.StringType,
-						MarkdownDescription: "String value of the feature if the type is `unicode`",
-						Optional:            true,
-					},
-					"integer_value": {
-						Type:                types.NumberType,
-						MarkdownDescription: "Integer value of the feature if the type is `int`",
-						Optional:            true,
-					},
-					"boolean_value": {
-						Type:                types.BoolType,
-						MarkdownDescription: "Boolean value of the feature if the type is `bool`",
-						Optional:            true,
-					},
-					"default_percentage_allocation": {
-						Type:                types.NumberType,
-						MarkdownDescription: "Percentage allocation of the current multivariate option",
-						Required:            true,
-					},
-				}),
-			},
-
 			"project_uuid": {
 				MarkdownDescription: "UUID of project the feature belongs to",
 				Required:            true,
