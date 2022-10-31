@@ -180,8 +180,8 @@ type FeatureResourceData struct {
 	DefaultEnabled types.Bool      `tfsdk:"default_enabled"`
 	IsArchived     types.Bool      `tfsdk:"is_archived"`
 	Owners         *[]types.Number `tfsdk:"owners"`
-	ProjectID   types.Number `tfsdk:"project_id"`
-	ProjectUUID types.String `tfsdk:"project_uuid"`
+	ProjectID      types.Number    `tfsdk:"project_id"`
+	ProjectUUID    types.String    `tfsdk:"project_uuid"`
 }
 
 func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
@@ -224,8 +224,8 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		DefaultEnabled: types.Bool{Value: clientFeature.DefaultEnabled},
 		IsArchived:     types.Bool{Value: clientFeature.IsArchived},
 		InitialValue:   types.String{Value: clientFeature.InitialValue},
-		ProjectID:   types.Number{Value: big.NewFloat(float64(*clientFeature.ProjectID))},
-		ProjectUUID: types.String{Value: clientFeature.ProjectUUID},
+		ProjectID:      types.Number{Value: big.NewFloat(float64(*clientFeature.ProjectID))},
+		ProjectUUID:    types.String{Value: clientFeature.ProjectUUID},
 	}
 	if clientFeature.Description != nil {
 		resourceData.Description = types.String{Value: *clientFeature.Description}
