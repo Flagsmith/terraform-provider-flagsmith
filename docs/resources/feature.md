@@ -18,18 +18,6 @@ resource "flagsmith_feature" "new_mv_feature" {
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
   description  = "This is a new multivariate feature"
   type         = "MULTIVARIATE"
-  multivariate_options = [
-    {
-      type : "unicode",
-      string_value : "option_value_10",
-      default_percentage_allocation : 10
-    },
-    {
-      type : "bool",
-      boolean_value : true,
-      default_percentage_allocation : 10
-    }
-  ]
 }
 
 resource "flagsmith_feature" "new_standard_feature" {
@@ -55,7 +43,6 @@ resource "flagsmith_feature" "new_standard_feature" {
 - `description` (String) Description of the feature
 - `initial_value` (String) Determines the initial value of the feature.
 - `is_archived` (Boolean) Can be used to archive/unarchive a feature. If unspecified, it will default to false
-- `multivariate_options` (Attributes List) (see [below for nested schema](#nestedatt--multivariate_options))
 - `owners` (Set of Number) List of user IDs who are owners of the feature
 
 ### Read-Only
@@ -63,24 +50,6 @@ resource "flagsmith_feature" "new_standard_feature" {
 - `id` (Number) ID of the feature
 - `project_id` (Number) ID of the project
 - `uuid` (String) UUID of the feature
-
-<a id="nestedatt--multivariate_options"></a>
-### Nested Schema for `multivariate_options`
-
-Required:
-
-- `default_percentage_allocation` (Number) Percentage allocation of the current multivariate option
-- `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
-
-Optional:
-
-- `boolean_value` (Boolean) Boolean value of the feature if the type is `bool`
-- `integer_value` (Number) Integer value of the feature if the type is `int`
-- `string_value` (String) String value of the feature if the type is `unicode`
-
-Read-Only:
-
-- `id` (Number) ID of the Multivariate option
 
 ## Import
 
