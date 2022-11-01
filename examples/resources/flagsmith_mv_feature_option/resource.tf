@@ -8,6 +8,6 @@ resource "flagsmith_feature" "feature_1" {
 resource "flagsmith_mv_feature_option" "feature_1_mv_option" {
   type                          = "unicode"
   feature_uuid                  = flagsmith_feature.feature_1.uuid
-  string_value                  = "option_value_30"
+  string_value                  = "option_value_60_percent_of_the_times"
   default_percentage_allocation = 60
 }
