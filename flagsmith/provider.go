@@ -80,7 +80,9 @@ func (p *fsProvider) Configure(ctx context.Context, req provider.ConfigureReques
 
 func (p *fsProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	return map[string]provider.ResourceType{
-		"flagsmith_flag": flagResourceType{},
+		"flagsmith_feature_state": featureStateResourceType{},
+		"flagsmith_feature": featureResourceType{},
+		"flagsmith_mv_feature_option": multivariateResourceType{},
 	}, nil
 }
 
@@ -91,7 +93,8 @@ func (p *fsProvider) GetDataSources(ctx context.Context) (map[string]provider.Da
 
 func (p *fsProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
-		MarkdownDescription: `The flagsmith provider is used to enable/disable and/or update flag values.`,
+		MarkdownDescription: `The flagsmith provider is used  to interact with the resource supported by Flagsmith.
+				      The provider needs to be configured with the proper credentials before it can be used.`,
 		Attributes: map[string]tfsdk.Attribute{
 			"master_api_key": {
 				MarkdownDescription: "Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`",

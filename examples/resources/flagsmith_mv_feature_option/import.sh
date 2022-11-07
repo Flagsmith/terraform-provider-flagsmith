@@ -1,0 +1,1 @@
+terraform import flagsmith_mv_feature_option.feature_1_mv_option <feature_uuid>,<mv_feature_option_uuid>

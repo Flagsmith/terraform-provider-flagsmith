@@ -14,16 +14,16 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = flagResourceType{}
-var _ resource.Resource = flagResource{}
-var _ resource.ResourceWithImportState = flagResource{}
+var _ provider.ResourceType = featureStateResourceType{}
+var _ resource.Resource = featureStateResource{}
+var _ resource.ResourceWithImportState = featureStateResource{}
 
-type flagResourceType struct{}
+type featureStateResourceType struct{}
 
-func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith feature/ Remote config associated with an environment",
+		MarkdownDescription: "Flagsmith Feature state/ Remote config value associated with an environment",
 
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -95,20 +95,20 @@ func (t flagResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-type flagResource struct {
+type featureStateResource struct {
 	provider fsProvider
 }
 
-func (t flagResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
+func (t featureStateResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
 	provider, diags := convertProviderType(in)
 
-	return flagResource{
+	return featureStateResource{
 		provider: provider,
 	}, diags
 }
 
-func (r flagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data FlagResourceData
+func (r featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data FeatureStateResourceData
 
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -151,8 +151,8 @@ func (r flagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
 }
-func (r flagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data FlagResourceData
+func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data FeatureStateResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
@@ -164,7 +164,7 @@ func (r flagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if err != nil {
 		panic(err)
 	}
-	resourceData := MakeFlagResourceDataFromClientFS(featureState)
+	resourceData := MakeFeatureStateResourceDataFromClientFS(featureState)
 
 	resourceData.EnvironmentKey = data.EnvironmentKey
 	resourceData.FeatureName = data.FeatureName
@@ -173,9 +173,9 @@ func (r flagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r flagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r featureStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
-	var plan FlagResourceData
+	var plan FeatureStateResourceData
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -184,7 +184,7 @@ func (r flagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	// Get current state
-	var state FlagResourceData
+	var state FeatureStateResourceData
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -203,7 +203,7 @@ func (r flagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
 		return
 	}
-	resourceData := MakeFlagResourceDataFromClientFS(updatedClientFS)
+	resourceData := MakeFeatureStateResourceDataFromClientFS(updatedClientFS)
 	resourceData.EnvironmentKey = plan.EnvironmentKey
 	resourceData.FeatureName = plan.FeatureName
 
@@ -212,7 +212,7 @@ func (r flagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r flagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r featureStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Since deleting a feature state does not make sense, we do nothing
 	// TODO: maybe reset to the default feature values
 	resp.State.RemoveResource(ctx)
@@ -220,7 +220,7 @@ func (r flagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 }
 
-func (r flagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r featureStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
 	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(

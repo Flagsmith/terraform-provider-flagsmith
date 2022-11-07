@@ -1,6 +1,7 @@
 package flagsmith_test
 
 import (
+	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/Flagsmith/terraform-provider-flagsmith/flagsmith"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -20,6 +21,7 @@ func testAccPreCheck(t *testing.T) {
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_KEY")
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_ID")
 	mustHaveEnv(t, "FLAGSMITH_FEATURE_ID")
+	mustHaveEnv(t, "FLAGSMITH_PROJECT_UUID")
 }
 
 func mustHaveEnv(t *testing.T, name string) {
@@ -33,6 +35,9 @@ func masterAPIKey() string {
 }
 func featureName() string {
 	return os.Getenv("FLAGSMITH_FEATURE_NAME")
+}
+func projectUUID() string {
+	return os.Getenv("FLAGSMITH_PROJECT_UUID")
 }
 func environmentKey() string {
 	return os.Getenv("FLAGSMITH_ENVIRONMENT_KEY")
@@ -51,4 +56,19 @@ func featureID() int {
 		panic(err)
 	}
 	return v
+}
+
+var tc *flagsmithapi.Client
+
+func testClient() *flagsmithapi.Client {
+	baseAPIURL := os.Getenv("FLAGSMITH_BASE_API_URL")
+	if baseAPIURL == "" {
+		baseAPIURL = "https://api.flagsmith.com/api/v1"
+	}
+
+	if tc == nil {
+		tc = flagsmithapi.NewClient(masterAPIKey(), baseAPIURL)
+	}
+
+	return tc
 }
