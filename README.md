@@ -48,10 +48,11 @@ To generate or update documentation, run `go generate`.
 Running acceptance tests require following environment variables to be set.
 
 * FLAGSMITH_MASTER_API_KEY
-* FLAGSMITH_FEATURE_NAME 
+* FLAGSMITH_FEATURE_NAME
 * FLAGSMITH_ENVIRONMENT_KEY
 * FLAGSMITH_ENVIRONMENT_ID
 * FLAGSMITH_FEATURE_ID
+* FLAGSMITH_PROJECT_UUID
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
