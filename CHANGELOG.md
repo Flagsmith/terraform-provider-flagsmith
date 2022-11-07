@@ -1,4 +1,4 @@
-## 0.1.4
+## 0.2.0
 BREAKING CHANGES:
 
 * resource: rename `flagsmith_flag` to `flagsmith_feature_state`
