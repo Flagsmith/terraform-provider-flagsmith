@@ -5,6 +5,7 @@ FEATURES:
 
 ENHANCEMENTS:
 * Update testify
+* Update terraform-plugin-go
 
 ## 0.2.0
 BREAKING CHANGES:
