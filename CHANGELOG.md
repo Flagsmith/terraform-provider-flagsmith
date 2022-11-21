@@ -6,6 +6,7 @@ FEATURES:
 ENHANCEMENTS:
 * Update testify
 * Update terraform-plugin-go
+* Update terraform-plugin-sdk/v2
 
 ## 0.2.0
 BREAKING CHANGES:
