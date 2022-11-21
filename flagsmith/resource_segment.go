@@ -20,7 +20,25 @@ var _ resource.ResourceWithImportState = segmentResource{}
 type segmentResourceType struct{}
 
 func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	rules := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
+	conditions := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
+		"property": {
+			Optional:            true,
+			MarkdownDescription: "Property of the condition",
+			Type:                types.StringType,
+		},
+		"operator": {
+			Required:            true,
+			MarkdownDescription: "Operator of the condition, can be one of `EQUAL`, `GREATER_THAN`, `LESS_THAN`, `LESS_THAN_INCLUSIVE` `CONTAINS`, `GREATER_THAN_INCLUSIVE`, `NOT_CONTAINS`, `NOT_EQUAL`,  `REGEX`, `PERCENTAGE_SPLIT`,  `MODULO`, `IS_SET`, `IS_NOT_SET`, `IN` ",
+			Type:                types.StringType,
+		},
+		"value": {
+			Optional:            true,
+			MarkdownDescription: "Value of the condition",
+			Type:                types.StringType,
+		},
+	})
+
+	nestedRules := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 		"type": {
 			Required:            true,
 			MarkdownDescription: "Type of the rule",
@@ -28,24 +46,8 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 		},
 		"conditions": {
 			Optional:            true,
-			MarkdownDescription: "Conditions for the rule",
-			Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-				"property": {
-					Optional:            true,
-					MarkdownDescription: "Property of the condition",
-					Type:                types.StringType,
-				},
-				"operator": {
-					Required:            true,
-					MarkdownDescription: "Operator of the condition",
-					Type:                types.StringType,
-				},
-				"value": {
-					Optional:            true,
-					MarkdownDescription: "Value of the condition",
-					Type:                types.StringType,
-				},
-			}),
+			MarkdownDescription: "List of conditions for the nested rule",
+			Attributes:          conditions,
 		},
 	})
 
@@ -81,7 +83,7 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 			"feature_id": {
 				Computed:            true,
 				Optional:            true,
-				MarkdownDescription: "ID of the assigned feature",
+				MarkdownDescription: "Set this to create a feature segment",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
@@ -108,35 +110,19 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"type": {
 						Required:            true,
-						MarkdownDescription: "Type of the rule",
+						MarkdownDescription: "Type of the rule, can be of: `ALL`, `ANY`, `NONE`",
 						Type:                types.StringType,
 					},
 					"rules": {
 						Optional:            true,
-						MarkdownDescription: "List of rules",
-						Attributes:          rules,
+						MarkdownDescription: "List of Nested Rules",
+						Attributes:          nestedRules,
 					},
 
 					"conditions": {
 						Optional:            true,
 						MarkdownDescription: "Conditions for the rule",
-						Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-							"property": {
-								Required:            true,
-								MarkdownDescription: "Property of the condition",
-								Type:                types.StringType,
-							},
-							"operator": {
-								Required:            true,
-								MarkdownDescription: "Operator of the condition",
-								Type:                types.StringType,
-							},
-							"value": {
-								Required:            true,
-								MarkdownDescription: "Value of the condition",
-								Type:                types.StringType,
-							},
-						}),
+						Attributes:          conditions,
 					},
 				}),
 			},
