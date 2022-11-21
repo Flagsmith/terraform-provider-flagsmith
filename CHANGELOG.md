@@ -1,3 +1,11 @@
+## 0.3.0
+FEATURES:
+
+* Add resource `flagsmith_segment`
+
+ENHANCEMENTS:
+* Update testify
+
 ## 0.2.0
 BREAKING CHANGES:
 
