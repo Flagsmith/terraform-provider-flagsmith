@@ -237,3 +237,147 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 	}
 	return resourceData
 }
+
+type Condition struct {
+	Operator types.String `tfsdk:"operator"`
+	Property types.String `tfsdk:"property"`
+	Value    types.String `tfsdk:"value"`
+}
+func (c *Condition) ToClientCondition() *flagsmithapi.Condition {
+	return &flagsmithapi.Condition{
+		Operator: c.Operator.Value,
+		Property: c.Property.Value,
+		Value:    c.Value.Value,
+	}
+}
+
+func MakeConditionFromClientCondition(clientCondition * flagsmithapi.Condition) Condition {
+	return Condition{
+		Operator: types.String{Value: clientCondition.Operator},
+		Property: types.String{Value: clientCondition.Property},
+		Value:    types.String{Value: clientCondition.Value},
+	}
+
+}
+type NestedRule struct {
+	Conditions []Condition `tfsdk:"conditions"`
+	Type      types.String `tfsdk:"type"`
+}
+func (t *NestedRule) ToClientRule() *flagsmithapi.Rule {
+	conditions := make([]flagsmithapi.Condition, 0)
+	for _, condition := range t.Conditions {
+		conditions = append(conditions, *condition.ToClientCondition())
+	}
+	return &flagsmithapi.Rule{
+		Conditions: conditions,
+		Type:       t.Type.Value,
+	}
+}
+func MakeNestedRuleFromClientRule(clientRule * flagsmithapi.Rule) NestedRule {
+	var conditions []Condition
+	for _, clientCondition := range clientRule.Conditions {
+		conditions = append(conditions, MakeConditionFromClientCondition(&clientCondition))
+	}
+	return NestedRule{
+		Conditions: conditions,
+		Type:       types.String{Value: clientRule.Type},
+	}
+
+}
+
+type Rule struct {
+	Type types.String `tfsdk:"type"`
+	Rules []NestedRule `tfsdk:"rules"`
+	Conditions []Condition `tfsdk:"conditions"`
+}
+
+func (r *Rule) ToClientRule() *flagsmithapi.Rule {
+	var conditions []flagsmithapi.Condition
+	for _, condition := range r.Conditions {
+		conditions = append(conditions, *condition.ToClientCondition())
+	}
+	var rules []flagsmithapi.Rule
+	for _, rule := range r.Rules {
+		rules = append(rules, *rule.ToClientRule())
+	}
+	return &flagsmithapi.Rule{
+		Type: r.Type.Value,
+		Rules: rules,
+		Conditions: conditions,
+	}
+}
+
+func MakeRuleFromClientRule(clientRule * flagsmithapi.Rule) Rule {
+	rule := Rule{
+		Type: types.String{Value: clientRule.Type},
+	}
+	for _, clientCondition := range clientRule.Conditions {
+		rule.Conditions = append(rule.Conditions, MakeConditionFromClientCondition(&clientCondition))
+	}
+	for _, clientSubRule := range clientRule.Rules {
+		rule.Rules = append(rule.Rules, MakeNestedRuleFromClientRule(&clientSubRule))
+	}
+	return rule
+}
+
+type SegmentResourceData struct {
+	ID types.Number `tfsdk:"id"`
+	UUID types.String `tfsdk:"uuid"`
+	Name types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	ProjectID types.Number `tfsdk:"project_id"`
+	ProjectUUID types.String `tfsdk:"project_uuid"`
+	FeatureID  types.Number `tfsdk:"feature_id"`
+	Rules []Rule `tfsdk:"rules"`
+}
+
+func (s *SegmentResourceData) ToClientSegment() *flagsmithapi.Segment {
+	segment := flagsmithapi.Segment{
+		UUID: s.UUID.Value,
+		Name: s.Name.Value,
+		ProjectUUID: s.ProjectUUID.Value,
+	}
+	if s.Description.Value != "" {
+		segment.Description = &s.Description.Value
+	}
+	if s.ID.Value != nil {
+		segmentID, _ := s.ID.Value.Int64()
+		segment.ID = &segmentID
+	}
+	if s.FeatureID.Value != nil {
+		featureID, _ := s.FeatureID.Value.Int64()
+		segment.FeatureID = &featureID
+	}
+	if s.ProjectID.Value != nil {
+		projectID, _ := s.ProjectID.Value.Int64()
+		segment.ProjectID = &projectID
+	}
+	for _, rule := range s.Rules {
+		segment.Rules = append(segment.Rules, *rule.ToClientRule())
+	}
+	return &segment
+}
+
+
+func MakeSegmentResourceDataFromClientSegment(clientSegment *flagsmithapi.Segment) SegmentResourceData {
+	resourceData := SegmentResourceData{
+		ID: types.Number{Value: big.NewFloat(float64(*clientSegment.ID))},
+		UUID: types.String{Value: clientSegment.UUID},
+		Name: types.String{Value: clientSegment.Name},
+		Description: types.String{Null: true},
+		ProjectID: types.Number{Value: big.NewFloat(float64(*clientSegment.ProjectID))},
+		ProjectUUID: types.String{Value: clientSegment.ProjectUUID},
+
+	}
+	if clientSegment.Description != nil {
+		resourceData.Description = types.String{Value: *clientSegment.Description}
+	}
+	if clientSegment.FeatureID != nil {
+		resourceData.FeatureID = types.Number{Value: big.NewFloat(float64(*clientSegment.FeatureID))}
+	}
+
+	for _, clientRule := range clientSegment.Rules {
+		resourceData.Rules = append(resourceData.Rules, MakeRuleFromClientRule(&clientRule))
+	}
+	return resourceData
+}

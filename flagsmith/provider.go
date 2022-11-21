@@ -83,6 +83,7 @@ func (p *fsProvider) GetResources(ctx context.Context) (map[string]provider.Reso
 		"flagsmith_feature_state": featureStateResourceType{},
 		"flagsmith_feature": featureResourceType{},
 		"flagsmith_mv_feature_option": multivariateResourceType{},
+		"flagsmith_segment": segmentResourceType{},
 	}, nil
 }
 
