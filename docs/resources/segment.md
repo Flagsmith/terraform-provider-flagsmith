@@ -41,7 +41,7 @@ resource "flagsmith_segment" "device_type_segment" {
 }
 
 
-resource "flagsmith_segment" "new_standard_feature_segment" {
+resource "flagsmith_segment" "new_standard_feature_specific_segment" {
   name         = "device_type"
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
   feature_id   = flagsmith_feature.new_standard_feature.id
@@ -75,7 +75,7 @@ resource "flagsmith_segment" "new_standard_feature_segment" {
 ### Optional
 
 - `description` (String) Description of the segment
-- `feature_id` (Number) Set this to create a feature segment
+- `feature_id` (Number) Set this to create a feature specific segment
 
 ### Read-Only
 

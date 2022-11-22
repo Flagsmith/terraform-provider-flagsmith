@@ -263,14 +263,14 @@ type NestedRule struct {
 	Conditions []Condition `tfsdk:"conditions"`
 	Type      types.String `tfsdk:"type"`
 }
-func (t *NestedRule) ToClientRule() *flagsmithapi.Rule {
+func (r *NestedRule) ToClientRule() *flagsmithapi.Rule {
 	conditions := make([]flagsmithapi.Condition, 0)
-	for _, condition := range t.Conditions {
+	for _, condition := range r.Conditions {
 		conditions = append(conditions, *condition.ToClientCondition())
 	}
 	return &flagsmithapi.Rule{
 		Conditions: conditions,
-		Type:       t.Type.Value,
+		Type:       r.Type.Value,
 	}
 }
 func MakeNestedRuleFromClientRule(clientRule * flagsmithapi.Rule) NestedRule {

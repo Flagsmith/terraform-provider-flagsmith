@@ -83,7 +83,7 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 			"feature_id": {
 				Computed:            true,
 				Optional:            true,
-				MarkdownDescription: "Set this to create a feature segment",
+				MarkdownDescription: "Set this to create a feature specific segment",
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
