@@ -123,7 +123,6 @@ func testAccSegmentResourceConfig(segmentName, description string) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
-  base_api_url   = "http://localhost:8000/api/v1"
 }
 
 resource "flagsmith_segment" "test_segment" {
