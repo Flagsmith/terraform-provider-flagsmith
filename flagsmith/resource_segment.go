@@ -5,21 +5,47 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = segmentResourceType{}
-var _ resource.Resource = segmentResource{}
-var _ resource.ResourceWithImportState = segmentResource{}
+var _ resource.Resource = &segmentResource{}
+var _ resource.ResourceWithImportState = &segmentResource{}
 
-type segmentResourceType struct{}
+func newSegmentResource() resource.Resource {
+	return &segmentResource{}
+}
+type segmentResource struct{
+	client *flagsmithapi.Client
+}
 
-func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (r *segmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_segment"
+}
+
+func (r *segmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*flagsmithapi.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *flagsmithapi.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.client = client
+}
+func (t *segmentResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	conditions := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 		"property": {
 			Optional:            true,
@@ -62,7 +88,7 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"uuid": {
 				Computed:            true,
@@ -78,7 +104,7 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"feature_id": {
 				Computed:            true,
@@ -87,7 +113,7 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"name": {
 				Required:            true,
@@ -131,20 +157,9 @@ func (t segmentResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 
 }
 
-type segmentResource struct {
-	provider fsProvider
-}
 
-func (t segmentResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
 
-	return segmentResource{
-		provider: provider,
-	}, diags
-
-}
-
-func (r segmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *segmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data SegmentResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -156,7 +171,7 @@ func (r segmentResource) Create(ctx context.Context, req resource.CreateRequest,
 	clientSegment := data.ToClientSegment()
 
 	// Create the segment
-	err := r.provider.client.CreateSegment(clientSegment)
+	err := r.client.CreateSegment(clientSegment)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create segment, got error: %s", err))
@@ -169,7 +184,7 @@ func (r segmentResource) Create(ctx context.Context, req resource.CreateRequest,
 
 }
 
-func (r segmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *segmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data SegmentResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -179,7 +194,7 @@ func (r segmentResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	segment, err := r.provider.client.GetSegment(data.UUID.Value)
+	segment, err := r.client.GetSegment(data.UUID.ValueString())
 	if err != nil {
 		panic(err)
 	}
@@ -190,7 +205,7 @@ func (r segmentResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 }
 
-func (r segmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *segmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//Get plan values
 	var plan SegmentResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -213,7 +228,7 @@ func (r segmentResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// Generate API request body from plan
 	clientSegment := plan.ToClientSegment()
 
-	err := r.provider.client.UpdateSegment(clientSegment)
+	err := r.client.UpdateSegment(clientSegment)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update segment, got error: %s", err))
 		return
@@ -228,7 +243,7 @@ func (r segmentResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 }
 
-func (r segmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *segmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Get current state
 	var state SegmentResourceData
 	diags := req.State.Get(ctx, &state)
@@ -241,7 +256,7 @@ func (r segmentResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	//Generate API request body from plan
 	clientSegment := state.ToClientSegment()
 
-	err := r.provider.client.DeleteSegment(*clientSegment.ProjectID, *clientSegment.ID)
+	err := r.client.DeleteSegment(*clientSegment.ProjectID, *clientSegment.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete segment, got error: %s", err))
 		return
@@ -249,6 +264,6 @@ func (r segmentResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	resp.State.RemoveResource(ctx)
 
 }
-func (r segmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *segmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("uuid"), req, resp)
 }

@@ -6,21 +6,49 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = multivariateResourceType{}
-var _ resource.Resource = multivariateResource{}
-var _ resource.ResourceWithImportState = multivariateResource{}
+var _ resource.Resource = &multivariateResource{}
+var _ resource.ResourceWithImportState = &multivariateResource{}
 
 type multivariateResourceType struct{}
+func newMultivariateResource() resource.Resource {
+	return &multivariateResource{}
+}
 
-func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type multivariateResource struct {
+	client *flagsmithapi.Client
+}
+
+func (r *multivariateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*flagsmithapi.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *flagsmithapi.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.client = client
+}
+func (r *multivariateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_mv_feature_option"
+}
+
+func (t *multivariateResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature Multivariate Option",
@@ -32,7 +60,7 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"uuid": {
 				Computed:            true,
@@ -54,7 +82,7 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				Optional:            true,
 			},
 			"integer_value": {
-				Type:                types.NumberType,
+				Type:                types.Int64Type,
 				MarkdownDescription: "Integer value of the multivariate option if the type is `int`",
 				Optional:            true,
 			},
@@ -71,7 +99,7 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 			"feature_id": {
 				Computed:            true,
 				MarkdownDescription: "ID of the feature to which the multivariate option belongs",
-				Type:                types.NumberType,
+				Type:                types.Int64Type,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
@@ -84,26 +112,14 @@ func (t multivariateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 			"project_id": {
 				Computed: 	  true,
 				MarkdownDescription: "Project ID of the feature to which the multivariate option belongs",
-				Type:                types.NumberType,
+				Type:                types.Int64Type,
 			},
 		},
 	}, nil
 }
 
-type multivariateResource struct {
-	provider fsProvider
-}
-func (t multivariateResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
 
-	return multivariateResource{
-		provider: provider,
-	}, diags
-}
-
-
-
-func (r multivariateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *multivariateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data MultivariateOptionResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -115,7 +131,7 @@ func (r multivariateResource) Create(ctx context.Context, req resource.CreateReq
 
 	mvOption := data.ToClientMultivariateOption()
 
-	err := r.provider.client.CreateFeatureMVOption(mvOption)
+	err := r.client.CreateFeatureMVOption(mvOption)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature multivariate option, got error: %s", err))
@@ -129,7 +145,7 @@ func (r multivariateResource) Create(ctx context.Context, req resource.CreateReq
 
 }
 
-func (r multivariateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *multivariateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data MultivariateOptionResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -139,7 +155,7 @@ func (r multivariateResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	mvOption, err := r.provider.client.GetFeatureMVOption(data.FeatureUUID.Value, data.UUID.Value)
+	mvOption, err := r.client.GetFeatureMVOption(data.FeatureUUID.ValueString(), data.UUID.ValueString())
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +167,7 @@ func (r multivariateResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 
-func (r multivariateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *multivariateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
 	var plan MultivariateOptionResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -182,7 +198,7 @@ func (r multivariateResource) Update(ctx context.Context, req resource.UpdateReq
 	// Generate API request body from plan
 	mvOption := state.ToClientMultivariateOption()
 
-	err := r.provider.client.UpdateFeatureMVOption(mvOption)
+	err := r.client.UpdateFeatureMVOption(mvOption)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature multivariate option, got error: %s", err))
 		return
@@ -198,7 +214,7 @@ func (r multivariateResource) Update(ctx context.Context, req resource.UpdateReq
 }
 
 
-func (r multivariateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *multivariateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	//Get current state
 	var state MultivariateOptionResourceData
 	diags := req.State.Get(ctx, &state)
@@ -211,7 +227,7 @@ func (r multivariateResource) Delete(ctx context.Context, req resource.DeleteReq
 	// Generate API request body from plan
 	mvOption:= state.ToClientMultivariateOption()
 
-	err := r.provider.client.DeleteFeatureMVOption(*mvOption.ProjectID, *mvOption.FeatureID, mvOption.ID)
+	err := r.client.DeleteFeatureMVOption(*mvOption.ProjectID, *mvOption.FeatureID, mvOption.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature multivariate option, got error: %s", err))
 		return
@@ -221,7 +237,7 @@ func (r multivariateResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 
-func (r multivariateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *multivariateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
 	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"math/big"
 
 	flagsmithapi "github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/stretchr/testify/assert"
@@ -12,10 +11,10 @@ import (
 
 func TestIntFeatureStateValueToClientFSV(t *testing.T) {
 	// Given
-	intFSV := FeatureStateValue{Type: types.String{Value: "int"},
-		StringValue:  types.String{Null: true},
-		IntegerValue: types.Number{Value: big.NewFloat(1)},
-		BooleanValue: types.Bool{Null: true},
+	intFSV := FeatureStateValue{Type: types.StringValue("int"),
+		StringValue:  types.StringNull(),
+		IntegerValue: types.Int64Value(1),
+		BooleanValue: types.BoolValue(true),
 	}
 	// When
 	clientFSV := intFSV.ToClientFSV()
@@ -33,10 +32,10 @@ func TestIntFeatureStateValueToClientFSV(t *testing.T) {
 
 func TestStringFeatureStateValueToClientFSV(t *testing.T) {
 	// Given
-	stringFSV := FeatureStateValue{Type: types.String{Value: "unicode"},
-		StringValue:  types.String{Value: "string"},
-		IntegerValue: types.Number{Null: true},
-		BooleanValue: types.Bool{Null: true},
+	stringFSV := FeatureStateValue{Type: types.StringValue("unicode"),
+		StringValue:  types.StringValue("string"),
+		IntegerValue: types.Int64Null(),
+		BooleanValue: types.BoolNull(),
 	}
 	// When
 	clientFSV := stringFSV.ToClientFSV()
@@ -53,10 +52,10 @@ func TestStringFeatureStateValueToClientFSV(t *testing.T) {
 
 func TestBoolFeatureStateValueToClientFSV(t *testing.T) {
 	// Given
-	boolFSV := FeatureStateValue{Type: types.String{Value: "bool"},
-		StringValue:  types.String{Null: true},
-		IntegerValue: types.Number{Null: true},
-		BooleanValue: types.Bool{Value: true},
+	boolFSV := FeatureStateValue{Type: types.StringValue( "bool"),
+		StringValue:  types.StringNull(),
+		IntegerValue: types.Int64Null(),
+		BooleanValue: types.BoolValue(true),
 	}
 	// When
 	clientFSV := boolFSV.ToClientFSV()
@@ -83,10 +82,10 @@ func TestMakeIntFeatureStateValueFromClientFSV(t *testing.T) {
 	fsv := MakeFeatureStateValueFromClientFSV(&clientFSV)
 
 	// Then
-	assert.Equal(t, "int", fsv.Type.Value)
-	assert.Equal(t, big.NewFloat(float64(intValue)), fsv.IntegerValue.Value)
-	assert.Equal(t, true, fsv.StringValue.Null)
-	assert.Equal(t, true, fsv.BooleanValue.Null)
+	assert.Equal(t, "int", fsv.Type.ValueString())
+	assert.Equal(t, intValue, fsv.IntegerValue.ValueInt64())
+	assert.Equal(t, true, fsv.StringValue.IsNull())
+	assert.Equal(t, true, fsv.BooleanValue.IsNull())
 }
 
 func TestMakeStringFeatureStateValueFromClientFSV(t *testing.T) {
@@ -100,10 +99,10 @@ func TestMakeStringFeatureStateValueFromClientFSV(t *testing.T) {
 	fsv := MakeFeatureStateValueFromClientFSV(&clientFSV)
 
 	// Then
-	assert.Equal(t, "unicode", fsv.Type.Value)
-	assert.Equal(t, stringValue, fsv.StringValue.Value)
-	assert.Equal(t, true, fsv.IntegerValue.Null)
-	assert.Equal(t, true, fsv.BooleanValue.Null)
+	assert.Equal(t, "unicode", fsv.Type.ValueString())
+	assert.Equal(t, stringValue, fsv.StringValue.ValueString())
+	assert.Equal(t, true, fsv.IntegerValue.IsNull())
+	assert.Equal(t, true, fsv.BooleanValue.IsNull())
 
 }
 
@@ -119,10 +118,10 @@ func TestMakeBooleanFeatureStateValueFromClientFSV(t *testing.T) {
 	fsv := MakeFeatureStateValueFromClientFSV(&clientFSV)
 
 	// Then
-	assert.Equal(t, "bool", fsv.Type.Value)
-	assert.Equal(t, boolValue, fsv.BooleanValue.Value)
-	assert.Equal(t, true, fsv.StringValue.Null)
-	assert.Equal(t, true, fsv.IntegerValue.Null)
+	assert.Equal(t, "bool", fsv.Type.ValueString())
+	assert.Equal(t, boolValue, fsv.BooleanValue.ValueBool())
+	assert.Equal(t, true, fsv.StringValue.IsNull())
+	assert.Equal(t, true, fsv.IntegerValue.IsNull())
 
 }
 
@@ -147,26 +146,26 @@ func TestMakeFeatureStateResourceDataFromClientFS(t *testing.T) {
 	featureStateResourceData := MakeFeatureStateResourceDataFromClientFS(&clientFS)
 
 	// Then
-	assert.Equal(t, big.NewFloat(1), featureStateResourceData.ID.Value)
-	assert.Equal(t, isEnabled, featureStateResourceData.Enabled.Value)
-	assert.Equal(t, big.NewFloat(1), featureStateResourceData.Feature.Value)
-	assert.Equal(t, big.NewFloat(1), featureStateResourceData.Environment.Value)
-	assert.Equal(t, "int", featureStateResourceData.FeatureStateValue.Type.Value)
-	assert.Equal(t, big.NewFloat(float64(intValue)), featureStateResourceData.FeatureStateValue.IntegerValue.Value)
-	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.StringValue.Null)
-	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.BooleanValue.Null)
+	assert.Equal(t, int64(1), featureStateResourceData.ID.ValueInt64())
+	assert.Equal(t, isEnabled, featureStateResourceData.Enabled.ValueBool())
+	assert.Equal(t, int64(1), featureStateResourceData.Feature.ValueInt64())
+	assert.Equal(t, int64(1), featureStateResourceData.Environment.ValueInt64())
+	assert.Equal(t, "int", featureStateResourceData.FeatureStateValue.Type.ValueString())
+	assert.Equal(t, intValue, featureStateResourceData.FeatureStateValue.IntegerValue.ValueInt64())
+	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.StringValue.IsNull())
+	assert.Equal(t, true, featureStateResourceData.FeatureStateValue.BooleanValue.IsNull())
 
 }
 
 func TestFeatureStateResourceDataToClientFS(t *testing.T) {
 	//Given
 	featureStateResourceData := FeatureStateResourceData{
-		Enabled: types.Bool{Value: true},
+		Enabled: types.BoolValue(true),
 		FeatureStateValue: &FeatureStateValue{
-			Type:         types.String{Value: "int"},
-			StringValue:  types.String{Null: true},
-			IntegerValue: types.Number{Value: big.NewFloat(1)},
-			BooleanValue: types.Bool{Null: true},
+			Type:         types.StringValue("int"),
+			StringValue:  types.StringNull(),
+			IntegerValue: types.Int64Value(1),
+			BooleanValue: types.BoolNull(),
 		},
 	}
 

@@ -5,22 +5,51 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"strings"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = featureStateResourceType{}
-var _ resource.Resource = featureStateResource{}
-var _ resource.ResourceWithImportState = featureStateResource{}
+var _ resource.Resource = &featureStateResource{}
+var _ resource.ResourceWithImportState = &featureStateResource{}
 
-type featureStateResourceType struct{}
+func newFeatureStateResource() resource.Resource {
+	return &featureStateResource{}
+}
 
-func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type featureStateResource struct {
+	client *flagsmithapi.Client
+
+}
+
+func (r *featureStateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_feature_state"
+}
+
+
+func (r *featureStateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*flagsmithapi.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *flagsmithapi.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.client = client
+}
+func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature state/ Remote config value associated with an environment",
@@ -32,7 +61,7 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"environment_key": {
 				Required:            true,
@@ -58,7 +87,7 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 						Optional:            true,
 					},
 					"integer_value": {
-						Type:                types.NumberType,
+						Type:                types.Int64Type,
 						MarkdownDescription: "Integer value of the feature if the type is `int`",
 						Optional:            true,
 					},
@@ -81,7 +110,7 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"environment": {
 				MarkdownDescription: "ID of the environment",
@@ -89,25 +118,16 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 		},
 	}, nil
 }
 
-type featureStateResource struct {
-	provider fsProvider
-}
 
-func (t featureStateResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
 
-	return featureStateResource{
-		provider: provider,
-	}, diags
-}
 
-func (r featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureStateResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -151,7 +171,7 @@ func (r featureStateResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
 }
-func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *featureStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data FeatureStateResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -160,7 +180,7 @@ func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest
 	if diags.HasError() {
 		return
 	}
-	featureState, err := r.provider.client.GetEnvironmentFeatureState(data.EnvironmentKey.Value, data.FeatureName.Value)
+	featureState, err := r.client.GetEnvironmentFeatureState(data.EnvironmentKey.ValueString(), data.FeatureName.ValueString())
 	if err != nil {
 		panic(err)
 	}
@@ -173,7 +193,7 @@ func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r featureStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *featureStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
 	var plan FeatureStateResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -192,12 +212,12 @@ func (r featureStateResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	// Generate API request body from plan
-	intFeatureStateID, _ := state.ID.Value.Int64()
-	intFeature, _ := state.Feature.Value.Int64()
-	intEnvironment, _ := state.Environment.Value.Int64()
+	intFeatureStateID := state.ID.ValueInt64()
+	intFeature := state.Feature.ValueInt64()
+	intEnvironment := state.Environment.ValueInt64()
 	clientFeatureState := plan.ToClientFS(intFeatureStateID, intFeature, intEnvironment)
 
-	updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
+	updatedClientFS, err := r.client.UpdateFeatureState(clientFeatureState)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
@@ -212,7 +232,7 @@ func (r featureStateResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r featureStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *featureStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Since deleting a feature state does not make sense, we do nothing
 	// TODO: maybe reset to the default feature values
 	resp.State.RemoveResource(ctx)
@@ -220,7 +240,7 @@ func (r featureStateResource) Delete(ctx context.Context, req resource.DeleteReq
 
 }
 
-func (r featureStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *featureStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
 	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(

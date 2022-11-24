@@ -7,6 +7,8 @@ import (
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -20,13 +22,13 @@ var _ provider.Provider = &fsProvider{}
 
 type fsProvider struct {
 	// client contains the upstream provider SDK used to
-	// communicate with the flagsmith api
-	client *flagsmithapi.Client
+	// // communicate with the flagsmith api
+	// client *flagsmithapi.Client
 
-	// configured is set to true at the end of the Configure method.
-	// This can be used in Resource and DataSource implementations to verify
-	// that the provider was previously configured.
-	configured bool
+	// // configured is set to true at the end of the Configure method.
+	// // This can be used in Resource and DataSource implementations to verify
+	// // that the provider was previously configured.
+	// configured bool
 
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
@@ -40,6 +42,11 @@ type providerData struct {
 	BaseAPIURL   types.String `tfsdk:"base_api_url"`
 }
 
+func (p *fsProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "flagsmith"
+	resp.Version = p.version
+}
+
 func (p *fsProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
 	var data providerData
@@ -50,46 +57,45 @@ func (p *fsProvider) Configure(ctx context.Context, req provider.ConfigureReques
 		return
 	}
 	var masterAPIKey string
-	if data.MasterAPIKey.Unknown {
+	if data.MasterAPIKey.IsUnknown() {
 		resp.Diagnostics.AddError("Unable to find master_api_key", "Cannot use unknown value for master_api_key")
 		return
 	}
-	if data.MasterAPIKey.Null {
+	if data.MasterAPIKey.IsNull() {
 		masterAPIKey = os.Getenv("FLAGSMITH_MASTER_API_KEY")
 
 	} else {
-		masterAPIKey = data.MasterAPIKey.Value
+		masterAPIKey = data.MasterAPIKey.ValueString()
 	}
 	if masterAPIKey == "" {
 		resp.Diagnostics.AddError("Unable to find master_api_key", "master_api_key cannot be an empty string")
 	}
 
 	baseAPIURL := BaseAPIURL
-	if data.BaseAPIURL.Value != "" {
-		baseAPIURL = data.BaseAPIURL.Value
+	if data.BaseAPIURL.ValueString() != "" {
+		baseAPIURL = data.BaseAPIURL.ValueString()
 
 	}
 
 	client := flagsmithapi.NewClient(masterAPIKey, baseAPIURL)
-	p.client = client
 
-	p.configured = true
-
-	return
+	resp.DataSourceData = client
+	resp.ResourceData = client
 }
 
-func (p *fsProvider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	return map[string]provider.ResourceType{
-		"flagsmith_feature_state": featureStateResourceType{},
-		"flagsmith_feature": featureResourceType{},
-		"flagsmith_mv_feature_option": multivariateResourceType{},
-		"flagsmith_segment": segmentResourceType{},
-	}, nil
+func (p *fsProvider) Resources(ctx context.Context)  []func() resource.Resource {
+	return []func() resource.Resource{
+		newFeatureResource,
+		newFeatureStateResource,
+		newSegmentResource,
+		newMultivariateResource,
+	}
+
 }
 
-func (p *fsProvider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
+func (p *fsProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	// Does not define any data source
-	return map[string]provider.DataSourceType{}, nil
+	return []func() datasource.DataSource{}
 }
 
 func (p *fsProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
