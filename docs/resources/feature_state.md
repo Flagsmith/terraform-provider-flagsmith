@@ -3,25 +3,63 @@
 page_title: "flagsmith_feature_state Resource - terraform-provider-flagsmith"
 subcategory: ""
 description: |-
-  Flagsmith Feature state/ Remote config value associated with an environment
+  Flagsmith Feature state/ Remote config value
 ---
 
 # flagsmith_feature_state (Resource)
 
-Flagsmith Feature state/ Remote config value associated with an environment
+Flagsmith Feature state/ Remote config value
 
 ## Example Usage
 
 ```terraform
+resource "flagsmith_feature" "new_standard_feature" {
+  feature_name = "new_standard_feature"
+  project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
+  description  = "This is a new standard feature"
+  type         = "STANDARD"
+}
+
+
 resource "flagsmith_feature_state" "feature_1_dev" {
   enabled         = true
   environment_key = "<environment_key>"
-  feature_name    = "feature_1"
+  feature         = flagsmith_feature.new_standard_feature.id
   feature_state_value = {
     type         = "unicode"
     string_value = "some_flag_value"
   }
 
+}
+
+resource "flagsmith_segment" "device_type_segment" {
+  name         = "device_type"
+  project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
+  rules = [
+    {
+      "rules" : [{
+        "conditions" : [{
+          "operator" : "EQUAL",
+          "property" : "device_type",
+          "value" : "mobile"
+        }],
+        "type" : "ANY"
+      }],
+      "type" : "ALL"
+    }
+  ]
+}
+
+resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
+  enabled          = true
+  environment_key  = "<environment_key>"
+  feature          = flagsmith_feature.new_standard_feature.id
+  segment          = flagsmith_segment.device_type_segment.id
+  segment_priority = 0
+  feature_state_value = {
+    type         = "unicode"
+    string_value = "segment_override_value"
+  }
 }
 ```
 
@@ -32,17 +70,20 @@ resource "flagsmith_feature_state" "feature_1_dev" {
 
 - `enabled` (Boolean) Used for enabling/disabling the feature
 - `environment_key` (String) Client side environment key associated with the environment
-- `feature_name` (String) Name of the feature
+- `feature` (Number) ID of the feature
 
 ### Optional
 
 - `feature_state_value` (Attributes) (see [below for nested schema](#nestedatt--feature_state_value))
+- `segment` (Number) ID of the segment, used for creating segment overrides
+- `segment_priority` (Number) Priority of the segment overrides.
 
 ### Read-Only
 
 - `environment` (Number) ID of the environment
-- `feature` (Number) ID of the feature
+- `feature_segment` (Number) ID of the feature_segment, used internally to bind a feature state to a segment
 - `id` (Number) ID of the featurestate
+- `uuid` (String) UUID of the featurestate
 
 <a id="nestedatt--feature_state_value"></a>
 ### Nested Schema for `feature_state_value`
@@ -59,5 +100,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import flagsmith_feature_state.some_flag <enviroment_client_key>,<feature_name>
+terraform import flagsmith_feature_state.some_flag <feature_state_uuid>
 ```

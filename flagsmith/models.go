@@ -64,34 +64,79 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 
 type FeatureStateResourceData struct {
 	ID                types.Int64        `tfsdk:"id"`
+	UUID              types.String       `tfsdk:"uuid"`
 	Enabled           types.Bool         `tfsdk:"enabled"`
 	FeatureStateValue *FeatureStateValue `tfsdk:"feature_state_value"`
 	Feature           types.Int64        `tfsdk:"feature"`
 	Environment       types.Int64        `tfsdk:"environment"`
-	FeatureName       types.String       `tfsdk:"feature_name"`
 	EnvironmentKey    types.String       `tfsdk:"environment_key"`
+	Segment           types.Int64        `tfsdk:"segment"`
+	SegmentPriority   types.Int64        `tfsdk:"segment_priority"`
+	FeatureSegment    types.Int64        `tfsdk:"feature_segment"`
 }
 
-func (f *FeatureStateResourceData) ToClientFS(featureStateID int64, feature int64, environment int64) *flagsmithapi.FeatureState {
-	return &flagsmithapi.FeatureState{
-		ID:                featureStateID,
+func (f *FeatureStateResourceData) ToClientFS() *flagsmithapi.FeatureState {
+	fs := flagsmithapi.FeatureState{
+		ID:                f.ID.ValueInt64(),
+		UUID:              f.UUID.ValueString(),
 		Enabled:           f.Enabled.ValueBool(),
 		FeatureStateValue: f.FeatureStateValue.ToClientFSV(),
-		Feature:           feature,
-		Environment:       environment,
+		Feature:           f.Feature.ValueInt64(),
+		EnvironmentKey:    f.EnvironmentKey.ValueString(),
 	}
+	featureSegment := f.FeatureSegment.ValueInt64()
+	segment := f.Segment.ValueInt64()
+	if featureSegment != 0 {
+		fs.FeatureSegment = &featureSegment
+	}
+	if segment != 0 {
+		fs.Segment = &segment
+	}
+	if !f.SegmentPriority.IsNull() && !f.SegmentPriority.IsUnknown() {
+		int64SegmentPriority := f.SegmentPriority.ValueInt64()
+		fs.SegmentPriority = &int64SegmentPriority
+	}
+
+	environment := f.Environment.ValueInt64()
+	if environment != 0 {
+		fs.Environment = &environment
+	}
+	return &fs
 }
 
 // Generate a new FeatureStateResourceData from client `FeatureState`
 func MakeFeatureStateResourceDataFromClientFS(clientFS *flagsmithapi.FeatureState) FeatureStateResourceData {
 	fsValue := MakeFeatureStateValueFromClientFSV(clientFS.FeatureStateValue)
-	return FeatureStateResourceData{
+	fs := FeatureStateResourceData{
 		ID:                types.Int64Value(clientFS.ID),
+		UUID:              types.StringValue(clientFS.UUID),
 		Enabled:           types.BoolValue(clientFS.Enabled),
 		FeatureStateValue: &fsValue,
 		Feature:           types.Int64Value(clientFS.Feature),
-		Environment:       types.Int64Value(clientFS.Environment),
+		Environment:       types.Int64Value(*clientFS.Environment),
+		EnvironmentKey:    types.StringValue(clientFS.EnvironmentKey),
+		Segment:           types.Int64Null(),
+		SegmentPriority:   types.Int64Null(),
+		FeatureSegment:    types.Int64Null(),
 	}
+	if clientFS.FeatureSegment != nil {
+		featureSegment := types.Int64Value(*clientFS.FeatureSegment)
+		fs.FeatureSegment = featureSegment
+
+		if clientFS.SegmentPriority != nil {
+			segmentPriority := types.Int64Value(*clientFS.SegmentPriority)
+			fs.SegmentPriority = segmentPriority
+		}
+
+		if clientFS.Segment != nil {
+			segment := types.Int64Value(*clientFS.Segment)
+			fs.Segment = segment
+		}
+
+
+	}
+	return fs
+
 }
 
 type MultivariateOptionResourceData struct {

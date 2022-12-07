@@ -140,7 +140,7 @@ func TestMakeFeatureStateResourceDataFromClientFS(t *testing.T) {
 		FeatureStateValue: &clientFSV,
 		Enabled:           isEnabled,
 		Feature:           int64(1),
-		Environment:       int64(1),
+		Environment:       &intValue,
 	}
 	// When
 	featureStateResourceData := MakeFeatureStateResourceDataFromClientFS(&clientFS)
@@ -159,8 +159,15 @@ func TestMakeFeatureStateResourceDataFromClientFS(t *testing.T) {
 
 func TestFeatureStateResourceDataToClientFS(t *testing.T) {
 	//Given
+	featureStateID := int64(1)
+	environmentID := int64(1)
+	featureID := int64(1)
+
 	featureStateResourceData := FeatureStateResourceData{
 		Enabled: types.BoolValue(true),
+		ID:     types.Int64Value(featureStateID),
+		Environment: types.Int64Value(environmentID),
+		Feature: types.Int64Value(featureID),
 		FeatureStateValue: &FeatureStateValue{
 			Type:         types.StringValue("int"),
 			StringValue:  types.StringNull(),
@@ -170,16 +177,13 @@ func TestFeatureStateResourceDataToClientFS(t *testing.T) {
 	}
 
 	// When
-	featureStateID := int64(1)
-	environment := int64(1)
-	feture := int64(1)
-	clientFS := featureStateResourceData.ToClientFS(featureStateID, environment, feture)
+	clientFS := featureStateResourceData.ToClientFS()
 
 	// Then
 	assert.Equal(t, featureStateID, clientFS.ID)
 	assert.Equal(t, true, clientFS.Enabled)
-	assert.Equal(t, int64(1), clientFS.Feature)
-	assert.Equal(t, int64(1), clientFS.Environment)
+	assert.Equal(t, featureID, clientFS.Feature)
+	assert.Equal(t, environmentID, *clientFS.Environment)
 	assert.Equal(t, "int", clientFS.FeatureStateValue.Type)
 	assert.Equal(t, int64(1), *clientFS.FeatureStateValue.IntegerValue)
 
