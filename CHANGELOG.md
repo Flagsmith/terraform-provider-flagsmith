@@ -1,7 +1,11 @@
 ## 0.3.0
+BREAKING CHANGES:
+* resource: update import of `flagsmith_feature_state` from `<enviroment_client_key>,<feature_name>` to `<enviroment_client_key>,<feature_state_uuid>`
+
 FEATURES:
 
 * Add resource `flagsmith_segment`
+* Add support for feature segment override
 
 ENHANCEMENTS:
 * Update testify
