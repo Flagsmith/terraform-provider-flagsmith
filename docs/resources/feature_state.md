@@ -100,5 +100,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import flagsmith_feature_state.some_flag <feature_state_uuid>
+terraform import flagsmith_feature_state.some_flag <enviroment_client_key>,<feature_state_uuid>
 ```
