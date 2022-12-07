@@ -5,7 +5,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * Add resource `flagsmith_segment`
-* Add support for feature segment override
+* Update resource `flagsmith_feature_state` to add support for segment override
 
 ENHANCEMENTS:
 * Update testify
