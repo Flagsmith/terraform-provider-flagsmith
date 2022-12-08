@@ -170,7 +170,6 @@ func (r *segmentResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 	clientSegment := data.ToClientSegment()
 
-	// Create the segment
 	err := r.client.CreateSegment(clientSegment)
 
 	if err != nil {

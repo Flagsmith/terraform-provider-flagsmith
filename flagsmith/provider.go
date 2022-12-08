@@ -21,15 +21,6 @@ const BaseAPIURL = "https://api.flagsmith.com/api/v1"
 var _ provider.Provider = &fsProvider{}
 
 type fsProvider struct {
-	// client contains the upstream provider SDK used to
-	// // communicate with the flagsmith api
-	// client *flagsmithapi.Client
-
-	// // configured is set to true at the end of the Configure method.
-	// // This can be used in Resource and DataSource implementations to verify
-	// // that the provider was previously configured.
-	// configured bool
-
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
