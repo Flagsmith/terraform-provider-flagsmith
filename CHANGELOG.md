@@ -1,6 +1,7 @@
 ## 0.3.0
 BREAKING CHANGES:
 * resource: update import of `flagsmith_feature_state` from `<enviroment_client_key>,<feature_name>` to `<enviroment_client_key>,<feature_state_uuid>`
+* resource: replace `feature_name` field with `feature_id` on `flagsmith_feature_state`
 
 FEATURES:
 
