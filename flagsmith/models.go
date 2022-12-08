@@ -67,12 +67,12 @@ type FeatureStateResourceData struct {
 	UUID              types.String       `tfsdk:"uuid"`
 	Enabled           types.Bool         `tfsdk:"enabled"`
 	FeatureStateValue *FeatureStateValue `tfsdk:"feature_state_value"`
-	Feature           types.Int64        `tfsdk:"feature"`
-	Environment       types.Int64        `tfsdk:"environment"`
+	Feature           types.Int64        `tfsdk:"feature_id"`
+	Environment       types.Int64        `tfsdk:"environment_id"`
 	EnvironmentKey    types.String       `tfsdk:"environment_key"`
-	Segment           types.Int64        `tfsdk:"segment"`
+	Segment           types.Int64        `tfsdk:"segment_id"`
 	SegmentPriority   types.Int64        `tfsdk:"segment_priority"`
-	FeatureSegment    types.Int64        `tfsdk:"feature_segment"`
+	FeatureSegment    types.Int64        `tfsdk:"feature_segment_id"`
 }
 
 func (f *FeatureStateResourceData) ToClientFS() *flagsmithapi.FeatureState {

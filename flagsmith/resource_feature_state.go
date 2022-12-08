@@ -74,7 +74,7 @@ func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				MarkdownDescription: "Client side environment key associated with the environment",
 				Type:                types.StringType,
 			},
-			"feature": {
+			"feature_id": {
 				MarkdownDescription: "ID of the feature",
 				Required:            true,
 				Type:                types.Int64Type,
@@ -110,7 +110,7 @@ func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				Required:            true,
 				Type:                types.BoolType,
 			},
-			"environment": {
+			"environment_id": {
 				MarkdownDescription: "ID of the environment",
 				Computed:            true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
@@ -118,7 +118,7 @@ func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				},
 				Type: types.Int64Type,
 			},
-			"segment": {
+			"segment_id": {
 				MarkdownDescription: "ID of the segment, used for creating segment overrides",
 				Optional:            true,
 				Type:                types.Int64Type,
@@ -128,7 +128,7 @@ func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, dia
 				Optional:            true,
 				Type:                types.Int64Type,
 			},
-			"feature_segment": {
+			"feature_segment_id": {
 				MarkdownDescription: "ID of the feature_segment, used internally to bind a feature state to a segment",
 				Computed:            true,
 				Type:                types.Int64Type,

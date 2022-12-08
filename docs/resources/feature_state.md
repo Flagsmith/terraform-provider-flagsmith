@@ -24,7 +24,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 resource "flagsmith_feature_state" "feature_1_dev" {
   enabled         = true
   environment_key = "<environment_key>"
-  feature         = flagsmith_feature.new_standard_feature.id
+  feature_id      = flagsmith_feature.new_standard_feature.id
   feature_state_value = {
     type         = "unicode"
     string_value = "some_flag_value"
@@ -53,8 +53,8 @@ resource "flagsmith_segment" "device_type_segment" {
 resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
   enabled          = true
   environment_key  = "<environment_key>"
-  feature          = flagsmith_feature.new_standard_feature.id
-  segment          = flagsmith_segment.device_type_segment.id
+  feature_id       = flagsmith_feature.new_standard_feature.id
+  segment_id       = flagsmith_segment.device_type_segment.id
   segment_priority = 0
   feature_state_value = {
     type         = "unicode"
@@ -70,18 +70,18 @@ resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
 
 - `enabled` (Boolean) Used for enabling/disabling the feature
 - `environment_key` (String) Client side environment key associated with the environment
-- `feature` (Number) ID of the feature
+- `feature_id` (Number) ID of the feature
 
 ### Optional
 
 - `feature_state_value` (Attributes) (see [below for nested schema](#nestedatt--feature_state_value))
-- `segment` (Number) ID of the segment, used for creating segment overrides
+- `segment_id` (Number) ID of the segment, used for creating segment overrides
 - `segment_priority` (Number) Priority of the segment overrides.
 
 ### Read-Only
 
-- `environment` (Number) ID of the environment
-- `feature_segment` (Number) ID of the feature_segment, used internally to bind a feature state to a segment
+- `environment_id` (Number) ID of the environment
+- `feature_segment_id` (Number) ID of the feature_segment, used internally to bind a feature state to a segment
 - `id` (Number) ID of the featurestate
 - `uuid` (String) UUID of the featurestate
 

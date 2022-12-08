@@ -3,8 +3,8 @@ package flagsmith_test
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
@@ -21,8 +21,8 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 				Config: testAccEnvironmentFeatureStateResourceConfig("one", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment", strconv.Itoa(environmentID())),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature", strconv.Itoa(featureID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_id", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_id", strconv.Itoa(featureID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_state_value.string_value", "one"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "enabled", "true"),
 				),
@@ -36,11 +36,10 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 				ImportStateIdFunc: getFeatureStateImportID("flagsmith_feature_state.dummy_environment_feature_x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment", strconv.Itoa(environmentID())),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature", strconv.Itoa(featureID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_id", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_id", strconv.Itoa(featureID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_state_value.string_value", "one"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "enabled", "true"),
-
 				),
 			},
 
@@ -49,18 +48,15 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 				Config: testAccEnvironmentFeatureStateResourceConfig("two", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment", strconv.Itoa(environmentID())),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature", strconv.Itoa(featureID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "environment_id", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_id", strconv.Itoa(featureID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "feature_state_value.string_value", "two"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x", "enabled", "false"),
 				),
-
 			},
-
 		},
 	})
 }
-
 
 func TestAccSegmntFeatureStateResource(t *testing.T) {
 	featureName := acctest.RandString(10)
@@ -73,15 +69,14 @@ func TestAccSegmntFeatureStateResource(t *testing.T) {
 				Config: testAccSegmentFeatureStateResourceConfig("one", featureName, true, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_id", strconv.Itoa(environmentID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_state_value.string_value", "one"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "enabled", "true"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_priority", "0"),
 
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment"),
-
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment_id"),
 				),
 			},
 
@@ -93,17 +88,14 @@ func TestAccSegmntFeatureStateResource(t *testing.T) {
 				ImportStateIdFunc: getFeatureStateImportID("flagsmith_feature_state.dummy_environment_feature_x_segment_override"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_id", strconv.Itoa(environmentID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_state_value.string_value", "one"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "enabled", "true"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_priority", "0"),
 
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment"),
-
-
-
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment_id"),
 				),
 			},
 
@@ -112,20 +104,16 @@ func TestAccSegmntFeatureStateResource(t *testing.T) {
 				Config: testAccSegmentFeatureStateResourceConfig("two", featureName, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_key", environmentKey()),
-					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment", strconv.Itoa(environmentID())),
+					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "environment_id", strconv.Itoa(environmentID())),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_state_value.string_value", "two"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "enabled", "false"),
 					resource.TestCheckResourceAttr("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_priority", "2"),
 
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment"),
-					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment"),
-
-
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "segment_id"),
+					resource.TestCheckResourceAttrSet("flagsmith_feature_state.dummy_environment_feature_x_segment_override", "feature_segment_id"),
 				),
-
 			},
-
 		},
 	})
 }
@@ -152,8 +140,6 @@ func testAccCheckSegmentFeatureStateDestroy(s *terraform.State) error {
 		return fmt.Errorf("feature still exists")
 	}
 	return nil
-
-
 
 }
 func testAccSegmentFeatureStateResourceConfig(featureStateValue string, featureName string, isEnabled bool, segmentPriority int) string {
@@ -190,8 +176,8 @@ resource "flagsmith_feature" "test_feature" {
 resource "flagsmith_feature_state" "dummy_environment_feature_x_segment_override" {
   enabled         = %t
   environment_key = "%s"
-  feature = flagsmith_feature.test_feature.id
-  segment = flagsmith_segment.test_segment.id
+  feature_id = flagsmith_feature.test_feature.id
+  segment_id = flagsmith_segment.test_segment.id
   segment_priority = %d
   feature_state_value = {
     type         = "unicode"
@@ -200,7 +186,7 @@ resource "flagsmith_feature_state" "dummy_environment_feature_x_segment_override
 
 }
 
-`,projectUUID(), featureName, projectUUID(), isEnabled, environmentKey(), segmentPriority, featureStateValue)
+`, projectUUID(), featureName, projectUUID(), isEnabled, environmentKey(), segmentPriority, featureStateValue)
 }
 
 func testAccEnvironmentFeatureStateResourceConfig(featureStateValue string, isEnabled bool) string {
@@ -212,7 +198,7 @@ provider "flagsmith" {
 resource "flagsmith_feature_state" "dummy_environment_feature_x" {
   enabled         = %t
   environment_key = "%s"
-  feature = %d
+  feature_id = %d
   feature_state_value = {
     type         = "unicode"
     string_value = "%s"
