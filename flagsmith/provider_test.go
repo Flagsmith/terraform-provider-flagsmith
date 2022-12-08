@@ -17,7 +17,6 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 
 func testAccPreCheck(t *testing.T) {
 	mustHaveEnv(t, "FLAGSMITH_MASTER_API_KEY")
-	mustHaveEnv(t, "FLAGSMITH_FEATURE_NAME")
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_KEY")
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_ID")
 	mustHaveEnv(t, "FLAGSMITH_FEATURE_ID")
@@ -32,9 +31,6 @@ func mustHaveEnv(t *testing.T, name string) {
 
 func masterAPIKey() string {
 	return os.Getenv("FLAGSMITH_MASTER_API_KEY")
-}
-func featureName() string {
-	return os.Getenv("FLAGSMITH_FEATURE_NAME")
 }
 func projectUUID() string {
 	return os.Getenv("FLAGSMITH_PROJECT_UUID")

@@ -5,21 +5,49 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = featureResourceType{}
-var _ resource.Resource = featureResource{}
-var _ resource.ResourceWithImportState = featureResource{}
+var _ resource.Resource = &featureResource{}
+var _ resource.ResourceWithImportState = &featureResource{}
 
-type featureResourceType struct{}
+func newFeatureResource() resource.Resource {
+	return &featureResource{}
+}
 
-func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type featureResource struct {
+	client *flagsmithapi.Client
+}
+
+func (r *featureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_feature"
+}
+
+
+func (r *featureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*flagsmithapi.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *flagsmithapi.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.client = client
+}
+func (t *featureResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature/ Remote config",
@@ -31,7 +59,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"uuid": {
 				Computed:            true,
@@ -47,7 +75,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
 			},
 			"feature_name": {
 				Required:            true,
@@ -95,7 +123,7 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 			},
 			"owners": {
 				Optional:            true,
-				Type:                types.SetType{ElemType: types.NumberType},
+				Type:                types.SetType{ElemType: types.Int64Type},
 				MarkdownDescription: "List of user IDs who are owners of the feature",
 			},
 			"project_uuid": {
@@ -107,19 +135,9 @@ func (t featureResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 	}, nil
 }
 
-type featureResource struct {
-	provider fsProvider
-}
 
-func (t featureResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource, diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
 
-	return featureResource{
-		provider: provider,
-	}, diags
-}
-
-func (r featureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -131,7 +149,7 @@ func (r featureResource) Create(ctx context.Context, req resource.CreateRequest,
 	clientFeature := data.ToClientFeature()
 
 	// Create the feature
-	err := r.provider.client.CreateFeature(clientFeature)
+	err := r.client.CreateFeature(clientFeature)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature, got error: %s", err))
@@ -143,7 +161,7 @@ func (r featureResource) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r featureResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *featureResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data FeatureResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -153,7 +171,7 @@ func (r featureResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	feature, err := r.provider.client.GetFeature(data.UUID.Value)
+	feature, err := r.client.GetFeature(data.UUID.ValueString())
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +182,7 @@ func (r featureResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 }
 
-func (r featureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//Get plan values
 	var plan FeatureResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -187,7 +205,7 @@ func (r featureResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// Generate API request body from plan
 	clientFeature := plan.ToClientFeature()
 
-	err := r.provider.client.UpdateFeature(clientFeature)
+	err := r.client.UpdateFeature(clientFeature)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature, got error: %s", err))
 		return
@@ -202,7 +220,7 @@ func (r featureResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 }
 
-func (r featureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *featureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Get current state
 	var state FeatureResourceData
 	diags := req.State.Get(ctx, &state)
@@ -215,7 +233,7 @@ func (r featureResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	// Generate API request body from plan
 	clientFeature := state.ToClientFeature()
 
-	err := r.provider.client.DeleteFeature(*clientFeature.ProjectID, *clientFeature.ID)
+	err := r.client.DeleteFeature(*clientFeature.ProjectID, *clientFeature.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature, got error: %s", err))
 		return
@@ -223,6 +241,6 @@ func (r featureResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	resp.State.RemoveResource(ctx)
 
 }
-func (r featureResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *featureResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("uuid"), req, resp)
 }

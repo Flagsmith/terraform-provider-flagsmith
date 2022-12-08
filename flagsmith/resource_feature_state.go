@@ -4,26 +4,53 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/Flagsmith/flagsmith-go-api-client"
 	"strings"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
-var _ provider.ResourceType = featureStateResourceType{}
-var _ resource.Resource = featureStateResource{}
-var _ resource.ResourceWithImportState = featureStateResource{}
+var _ resource.Resource = &featureStateResource{}
+var _ resource.ResourceWithImportState = &featureStateResource{}
 
-type featureStateResourceType struct{}
+func newFeatureStateResource() resource.Resource {
+	return &featureStateResource{}
+}
 
-func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type featureStateResource struct {
+	client *flagsmithapi.Client
+}
+
+func (r *featureStateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_feature_state"
+}
+
+func (r *featureStateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*flagsmithapi.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *flagsmithapi.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.client = client
+}
+func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith Feature state/ Remote config value associated with an environment",
+		MarkdownDescription: "Flagsmith Feature state/ Remote config value",
 
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -32,17 +59,25 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
+			},
+			"uuid": {
+				Computed:            true,
+				MarkdownDescription: "UUID of the featurestate",
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
+				Type: types.StringType,
 			},
 			"environment_key": {
 				Required:            true,
 				MarkdownDescription: "Client side environment key associated with the environment",
 				Type:                types.StringType,
 			},
-			"feature_name": {
+			"feature_id": {
+				MarkdownDescription: "ID of the feature",
 				Required:            true,
-				MarkdownDescription: "Name of the feature",
-				Type:                types.StringType,
+				Type:                types.Int64Type,
 			},
 			"feature_state_value": {
 				Optional: true,
@@ -58,7 +93,7 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 						Optional:            true,
 					},
 					"integer_value": {
-						Type:                types.NumberType,
+						Type:                types.Int64Type,
 						MarkdownDescription: "Integer value of the feature if the type is `int`",
 						Optional:            true,
 					},
@@ -75,39 +110,37 @@ func (t featureStateResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, 
 				Required:            true,
 				Type:                types.BoolType,
 			},
-			"feature": {
-				MarkdownDescription: "ID of the feature",
-				Computed:            true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.NumberType,
-			},
-			"environment": {
+			"environment_id": {
 				MarkdownDescription: "ID of the environment",
 				Computed:            true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.UseStateForUnknown(),
 				},
-				Type: types.NumberType,
+				Type: types.Int64Type,
+			},
+			"segment_id": {
+				MarkdownDescription: "ID of the segment, used for creating segment overrides",
+				Optional:            true,
+				Type:                types.Int64Type,
+			},
+			"segment_priority": {
+				MarkdownDescription: "Priority of the segment overrides.",
+				Optional:            true,
+				Type:                types.Int64Type,
+			},
+			"feature_segment_id": {
+				MarkdownDescription: "ID of the feature_segment, used internally to bind a feature state to a segment",
+				Computed:            true,
+				Type:                types.Int64Type,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.UseStateForUnknown(),
+				},
 			},
 		},
 	}, nil
 }
 
-type featureStateResource struct {
-	provider fsProvider
-}
-
-func (t featureStateResourceType) NewResource(ctx context.Context, in provider.Provider) (resource.Resource , diag.Diagnostics) {
-	provider, diags := convertProviderType(in)
-
-	return featureStateResource{
-		provider: provider,
-	}, diags
-}
-
-func (r featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureStateResourceData
 
 	diags := req.Config.Get(ctx, &data)
@@ -116,6 +149,21 @@ func (r featureStateResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Create segment override if segment is set
+	if data.Segment.ValueInt64() != 0 {
+		clientFeatureState := data.ToClientFS()
+		err := r.client.CreateSegmentOverride(clientFeatureState)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating segment override", err.Error())
+			return
+		}
+		// set the state with the new values
+		resourceData := MakeFeatureStateResourceDataFromClientFS(clientFeatureState)
+		diags = resp.State.Set(ctx, &resourceData)
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
 	// Read and load the state of the object
 	readResponse := resource.ReadResponse{State: resp.State}
 	r.Read(ctx, resource.ReadRequest{
@@ -151,7 +199,7 @@ func (r featureStateResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(updateResponse.Diagnostics...)
 
 }
-func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *featureStateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data FeatureStateResourceData
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -160,20 +208,28 @@ func (r featureStateResource) Read(ctx context.Context, req resource.ReadRequest
 	if diags.HasError() {
 		return
 	}
-	featureState, err := r.provider.client.GetEnvironmentFeatureState(data.EnvironmentKey.Value, data.FeatureName.Value)
+
+	var featureState *flagsmithapi.FeatureState
+	var err error
+
+	if data.UUID.ValueString() != "" {
+		featureState, err = r.client.GetFeatureState(data.UUID.ValueString())
+
+	} else {
+		featureState, err = r.client.GetEnvironmentFeatureState(data.EnvironmentKey.ValueString(), data.Feature.ValueInt64())
+	}
 	if err != nil {
 		panic(err)
 	}
 	resourceData := MakeFeatureStateResourceDataFromClientFS(featureState)
 
 	resourceData.EnvironmentKey = data.EnvironmentKey
-	resourceData.FeatureName = data.FeatureName
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r featureStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *featureStateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
 	var plan FeatureStateResourceData
 	diags := req.Plan.Get(ctx, &plan)
@@ -192,44 +248,63 @@ func (r featureStateResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	// Generate API request body from plan
-	intFeatureStateID, _ := state.ID.Value.Int64()
-	intFeature, _ := state.Feature.Value.Int64()
-	intEnvironment, _ := state.Environment.Value.Int64()
-	clientFeatureState := plan.ToClientFS(intFeatureStateID, intFeature, intEnvironment)
+	clientFeatureState := plan.ToClientFS()
 
-	updatedClientFS, err := r.provider.client.UpdateFeatureState(clientFeatureState)
+	// Load computed data from the state
+	clientFeatureState.ID = state.ID.ValueInt64()
+	clientFeatureState.Feature = state.Feature.ValueInt64()
+	intEnvironment := state.Environment.ValueInt64()
+	clientFeatureState.Environment = &intEnvironment
+
+	updateSegmentPriority := state.SegmentPriority.ValueInt64() != plan.SegmentPriority.ValueInt64()
+	err := r.client.UpdateFeatureState(clientFeatureState, updateSegmentPriority)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature state, got error: %s", err))
 		return
 	}
-	resourceData := MakeFeatureStateResourceDataFromClientFS(updatedClientFS)
+	resourceData := MakeFeatureStateResourceDataFromClientFS(clientFeatureState)
 	resourceData.EnvironmentKey = plan.EnvironmentKey
-	resourceData.FeatureName = plan.FeatureName
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r featureStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Since deleting a feature state does not make sense, we do nothing
-	// TODO: maybe reset to the default feature values
+func (r *featureStateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Get current state
+	var state FeatureStateResourceData
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Delete: Error state data")
+		return
+	}
+
+	// Delete feature segment if it exists
+	if state.FeatureSegment.ValueInt64() != 0 {
+		err := r.client.DeleteFeatureSegment(state.FeatureSegment.ValueInt64())
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feature segment, got error: %s", err))
+			return
+		}
+	}
 	resp.State.RemoveResource(ctx)
 	return
 
 }
 
-func (r featureStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *featureStateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
 	if len(importKey) != 2 || importKey[0] == "" || importKey[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: environment,feature_name Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: environment,feature_state_uuid Got: %q", req.ID),
 		)
 		return
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_key"), importKey[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("feature_name"), importKey[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("uuid"), importKey[1])...)
 
 }
