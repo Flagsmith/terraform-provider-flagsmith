@@ -3,14 +3,16 @@ package flagsmith
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"strings"
 )
 
@@ -47,97 +49,81 @@ func (r *featureStateResource) Configure(ctx context.Context, req resource.Confi
 
 	r.client = client
 }
-func (t *featureStateResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature state/ Remote config value",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the featurestate",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				// PlanModifiers: tfsdk.AttributePlanModifiers{
+				// 	resource.UseStateForUnknown(),
+				// },
+
+				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"uuid": {
+			"uuid": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "UUID of the featurestate",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.StringType,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"environment_key": {
+			"environment_key": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Client side environment key associated with the environment",
-				Type:                types.StringType,
 			},
-			"feature_id": {
+			"feature_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the feature",
 				Required:            true,
-				Type:                types.Int64Type,
 			},
-			"feature_state_value": {
+			"feature_state_value": schema.SingleNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-					"type": {
-						Type:                types.StringType,
+				Attributes: map[string]schema.Attribute{
+					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
 						Optional:            true,
 					},
-					"string_value": {
-						Type:                types.StringType,
+					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`",
 						Optional:            true,
 					},
-					"integer_value": {
-						Type:                types.Int64Type,
+					"integer_value": schema.Int64Attribute{
 						MarkdownDescription: "Integer value of the feature if the type is `int`",
 						Optional:            true,
 					},
-					"boolean_value": {
-						Type:                types.BoolType,
+					"boolean_value": schema.BoolAttribute{
 						MarkdownDescription: "Boolean value of the feature if the type is `bool`",
 						Optional:            true,
 					},
-				}),
+				},
 			},
 
-			"enabled": {
+			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Used for enabling/disabling the feature",
 				Required:            true,
-				Type:                types.BoolType,
 			},
-			"environment_id": {
+			"environment_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the environment",
 				Computed:            true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"segment_id": {
+			"segment_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the segment, used for creating segment overrides",
 				Optional:            true,
-				Type:                types.Int64Type,
 			},
-			"segment_priority": {
+			"segment_priority": schema.Int64Attribute{
 				MarkdownDescription: "Priority of the segment overrides.",
 				Optional:            true,
-				Type:                types.Int64Type,
 			},
-			"feature_segment_id": {
+			"feature_segment_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the feature_segment, used internally to bind a feature state to a segment",
 				Computed:            true,
-				Type:                types.Int64Type,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
+
+				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

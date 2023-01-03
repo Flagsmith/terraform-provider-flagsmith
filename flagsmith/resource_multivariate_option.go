@@ -2,16 +2,17 @@ package flagsmith
 
 import (
 	"context"
-	"strings"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"strings"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -19,6 +20,7 @@ var _ resource.Resource = &multivariateResource{}
 var _ resource.ResourceWithImportState = &multivariateResource{}
 
 type multivariateResourceType struct{}
+
 func newMultivariateResource() resource.Resource {
 	return &multivariateResource{}
 }
@@ -48,76 +50,60 @@ func (r *multivariateResource) Metadata(ctx context.Context, req resource.Metada
 	resp.TypeName = req.ProviderTypeName + "_mv_feature_option"
 }
 
-func (t *multivariateResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (t *multivariateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature Multivariate Option",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the multivariate option",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+
+				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"uuid": {
+			"uuid": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "UUID of the multivariate option",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.StringType,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 
-			"type": {
-				Type:                types.StringType,
+			"type": schema.StringAttribute{
 				MarkdownDescription: "Type of the multivariate option can be `unicode`, `int` or `bool`",
 				Required:            true,
 			},
-			"string_value": {
-				Type:                types.StringType,
+			"string_value": schema.StringAttribute{
 				MarkdownDescription: "String value of the multivariate option if the type is `unicode`",
 				Optional:            true,
 			},
-			"integer_value": {
-				Type:                types.Int64Type,
+			"integer_value": schema.Int64Attribute{
 				MarkdownDescription: "Integer value of the multivariate option if the type is `int`",
 				Optional:            true,
 			},
-			"boolean_value": {
-				Type:                types.BoolType,
+			"boolean_value": schema.BoolAttribute{
 				MarkdownDescription: "Boolean value of the multivariate option if the type is `bool`",
 				Optional:            true,
 			},
-			"default_percentage_allocation": {
-				Type:                types.NumberType,
+			"default_percentage_allocation": schema.NumberAttribute{
 				MarkdownDescription: "Percentage allocation of the current multivariate option",
 				Required:            true,
 			},
-			"feature_id": {
+			"feature_id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the feature to which the multivariate option belongs",
-				Type:                types.Int64Type,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"feature_uuid": {
+			"feature_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of the feature to which the multivariate option belongs",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"project_id": {
-				Computed: 	  true,
+			"project_id": schema.Int64Attribute{
+				Computed:            true,
 				MarkdownDescription: "Project ID of the feature to which the multivariate option belongs",
-				Type:                types.Int64Type,
 			},
 		},
-	}, nil
+	}
 }
-
 
 func (r *multivariateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data MultivariateOptionResourceData
@@ -166,7 +152,6 @@ func (r *multivariateResource) Read(ctx context.Context, req resource.ReadReques
 
 }
 
-
 func (r *multivariateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Get plan values
 	var plan MultivariateOptionResourceData
@@ -213,7 +198,6 @@ func (r *multivariateResource) Update(ctx context.Context, req resource.UpdateRe
 
 }
 
-
 func (r *multivariateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	//Get current state
 	var state MultivariateOptionResourceData
@@ -225,7 +209,7 @@ func (r *multivariateResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 	// Generate API request body from plan
-	mvOption:= state.ToClientMultivariateOption()
+	mvOption := state.ToClientMultivariateOption()
 
 	err := r.client.DeleteFeatureMVOption(*mvOption.ProjectID, *mvOption.FeatureID, mvOption.ID)
 	if err != nil {
@@ -235,7 +219,6 @@ func (r *multivariateResource) Delete(ctx context.Context, req resource.DeleteRe
 	resp.State.RemoveResource(ctx)
 
 }
-
 
 func (r *multivariateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	importKey := strings.Split(req.ID, ",")
@@ -248,6 +231,5 @@ func (r *multivariateResource) ImportState(ctx context.Context, req resource.Imp
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("feature_uuid"), importKey[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("uuid"), importKey[1])...)
-
 
 }

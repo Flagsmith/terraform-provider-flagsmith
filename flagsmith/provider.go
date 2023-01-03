@@ -6,12 +6,11 @@ import (
 	"os"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -74,7 +73,7 @@ func (p *fsProvider) Configure(ctx context.Context, req provider.ConfigureReques
 	resp.ResourceData = client
 }
 
-func (p *fsProvider) Resources(ctx context.Context)  []func() resource.Resource {
+func (p *fsProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		newFeatureResource,
 		newFeatureStateResource,
@@ -89,24 +88,22 @@ func (p *fsProvider) DataSources(ctx context.Context) []func() datasource.DataSo
 	return []func() datasource.DataSource{}
 }
 
-func (p *fsProvider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (p *fsProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: `The flagsmith provider is used  to interact with the resource supported by Flagsmith.
 				      The provider needs to be configured with the proper credentials before it can be used.`,
-		Attributes: map[string]tfsdk.Attribute{
-			"master_api_key": {
+		Attributes: map[string]schema.Attribute{
+			"master_api_key": schema.StringAttribute{
 				MarkdownDescription: "Master API key used by flagsmith api client. Can also be set using the environment variable `FLAGSMITH_MASTER_API_KEY`",
 				Optional:            true,
-				Type:                types.StringType,
 				Sensitive:           true,
 			},
-			"base_api_url": {
+			"base_api_url": schema.StringAttribute{
 				MarkdownDescription: "Used by api client to connect to flagsmith instance. NOTE: update this if you are running a self hosted version. e.g: https://your.flagsmith.com/api/v1",
 				Optional:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
 
 func New(version string) func() provider.Provider {
