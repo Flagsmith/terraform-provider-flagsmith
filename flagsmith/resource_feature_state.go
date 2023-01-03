@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -58,10 +60,6 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the featurestate",
-				// PlanModifiers: tfsdk.AttributePlanModifiers{
-				// 	resource.UseStateForUnknown(),
-				// },
-
 				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"uuid": schema.StringAttribute{
@@ -78,11 +76,13 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 				Required:            true,
 			},
 			"feature_state_value": schema.SingleNestedAttribute{
-				Optional: true,
+				Required: true,
+				Validators: []validator.Object{validateFeatureStateValue()},
 				Attributes: map[string]schema.Attribute{
 					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
-						Optional:            true,
+						Required:            true,
+
 					},
 					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`",
