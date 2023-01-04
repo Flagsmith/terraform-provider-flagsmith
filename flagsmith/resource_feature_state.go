@@ -78,6 +78,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"feature_state_value": schema.SingleNestedAttribute{
 				Required: true,
 				Validators: []validator.Object{validateFeatureStateValue()},
+				MarkdownDescription: "Value for the feature State. NOTE: One of string_value, integer_value or boolean_value must be set",
 				Attributes: map[string]schema.Attribute{
 					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",

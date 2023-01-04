@@ -71,7 +71,7 @@ resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
 - `enabled` (Boolean) Used for enabling/disabling the feature
 - `environment_key` (String) Client side environment key associated with the environment
 - `feature_id` (Number) ID of the feature
-- `feature_state_value` (Attributes) (see [below for nested schema](#nestedatt--feature_state_value))
+- `feature_state_value` (Attributes) Value for the feature State. NOTE: One of string_value, integer_value or boolean_value must be set (see [below for nested schema](#nestedatt--feature_state_value))
 
 ### Optional
 
