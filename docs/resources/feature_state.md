@@ -96,7 +96,7 @@ Optional:
 
 - `boolean_value` (Boolean) Boolean value of the feature if the type is `bool`
 - `integer_value` (Number) Integer value of the feature if the type is `int`
-- `string_value` (String) String value of the feature if the type is `unicode`
+- `string_value` (String) String value of the feature if the type is `unicode`. NOTE: Leave it as an empty string('') if feature value is not going to be used
 
 ## Import
 
