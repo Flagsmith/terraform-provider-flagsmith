@@ -2,6 +2,7 @@ package flagsmith
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -21,15 +22,23 @@ func (v validatorFeatureStateValue) MarkdownDescription(ctx context.Context) str
 }
 
 func (v validatorFeatureStateValue) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-
 	attrs := req.ConfigValue.Attributes()
 
-	if (attrs["string_value"].IsNull() || attrs["string_value"].IsUnknown()) && (attrs["integer_value"].IsNull() || attrs["integer_value"].IsUnknown()) && (attrs["boolean_value"].IsNull() || attrs["boolean_value"].IsUnknown()) {
+	if !hasValue(attrs) {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid feature_state_value",
 			"One of string_value, integer_value or boolean_value must be set",
 		)
-
 	}
+}
+
+func hasValue(attrs map[string]attr.Value) bool {
+	values := []string{"string_value", "integer_value", "boolean_value"}
+	for _, value := range values {
+		if !(attrs[value].IsNull() || attrs[value].IsUnknown()) {
+			return true
+		}
+	}
+	return false
 }
