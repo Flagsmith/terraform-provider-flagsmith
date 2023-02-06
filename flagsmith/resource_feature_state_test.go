@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
+	"regexp"
 )
 
 func TestAccEnvironmentFeatureStateResource(t *testing.T) {
@@ -16,6 +17,13 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Test feature State value validator
+			{
+				Config: testAccInvalidFeatureStateValueConfig(),
+				ExpectError: regexp.MustCompile(`Invalid feature_state_value`),
+
+			},
+
 			// Create and Read testing
 			{
 				Config: testAccEnvironmentFeatureStateResourceConfig("one", true),
@@ -58,7 +66,7 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 	})
 }
 
-func TestAccSegmntFeatureStateResource(t *testing.T) {
+func TestAccSegmentFeatureStateResource(t *testing.T) {
 	featureName := acctest.RandString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -207,4 +215,21 @@ resource "flagsmith_feature_state" "dummy_environment_feature_x" {
 }
 
 `, isEnabled, environmentKey(), featureID(), featureStateValue)
+}
+func testAccInvalidFeatureStateValueConfig() string {
+	return fmt.Sprintf(`
+provider "flagsmith" {
+
+}
+
+resource "flagsmith_feature_state" "dummy_environment_feature_x" {
+  enabled         = true
+  environment_key = "%s"
+  feature_id = %d
+  feature_state_value = {
+    type         = "unicode"
+  }
+}
+
+`,  environmentKey(), featureID())
 }

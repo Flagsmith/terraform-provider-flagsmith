@@ -92,7 +92,7 @@ Required:
 
 Optional:
 
-- `conditions` (Attributes List) Conditions for the rule (see [below for nested schema](#nestedatt--rules--conditions))
+- `conditions` (Attributes List) List of Conditions for the nested Rule (see [below for nested schema](#nestedatt--rules--conditions))
 - `rules` (Attributes List) List of Nested Rules (see [below for nested schema](#nestedatt--rules--rules))
 
 <a id="nestedatt--rules--conditions"></a>
@@ -117,7 +117,7 @@ Required:
 
 Optional:
 
-- `conditions` (Attributes List) List of conditions for the nested rule (see [below for nested schema](#nestedatt--rules--rules--conditions))
+- `conditions` (Attributes List) List of Conditions for the nested Rule (see [below for nested schema](#nestedatt--rules--rules--conditions))
 
 <a id="nestedatt--rules--rules--conditions"></a>
 ### Nested Schema for `rules.rules.conditions`

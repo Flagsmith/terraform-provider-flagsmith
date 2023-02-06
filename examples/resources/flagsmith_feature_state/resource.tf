@@ -12,7 +12,7 @@ resource "flagsmith_feature_state" "feature_1_dev" {
   feature_id      = flagsmith_feature.new_standard_feature.id
   feature_state_value = {
     type         = "unicode"
-    string_value = "some_flag_value"
+    string_value = "some_flag_value" # leave it as empty string("") if you don't want to set any value
   }
 
 }

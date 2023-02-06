@@ -3,14 +3,15 @@ package flagsmith
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -20,7 +21,8 @@ var _ resource.ResourceWithImportState = &segmentResource{}
 func newSegmentResource() resource.Resource {
 	return &segmentResource{}
 }
-type segmentResource struct{
+
+type segmentResource struct {
 	client *flagsmithapi.Client
 }
 
@@ -45,119 +47,102 @@ func (r *segmentResource) Configure(ctx context.Context, req resource.ConfigureR
 
 	r.client = client
 }
-func (t *segmentResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	conditions := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-		"property": {
-			Optional:            true,
-			MarkdownDescription: "Property of the condition",
-			Type:                types.StringType,
-		},
-		"operator": {
-			Required:            true,
-			MarkdownDescription: "Operator of the condition, can be one of `EQUAL`, `GREATER_THAN`, `LESS_THAN`, `LESS_THAN_INCLUSIVE` `CONTAINS`, `GREATER_THAN_INCLUSIVE`, `NOT_CONTAINS`, `NOT_EQUAL`,  `REGEX`, `PERCENTAGE_SPLIT`,  `MODULO`, `IS_SET`, `IS_NOT_SET`, `IN` ",
-			Type:                types.StringType,
-		},
-		"value": {
-			Optional:            true,
-			MarkdownDescription: "Value of the condition",
-			Type:                types.StringType,
-		},
-	})
+func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	conditions := schema.ListNestedAttribute{
+		Optional: true,
+		MarkdownDescription: "List of Conditions for the nested Rule",
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
 
-	nestedRules := tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-		"type": {
-			Required:            true,
-			MarkdownDescription: "Type of the rule",
-			Type:                types.StringType,
+				"property": schema.StringAttribute{
+					Optional:            true,
+					MarkdownDescription: "Property of the condition",
+				},
+				"operator": schema.StringAttribute{
+					Required:            true,
+					MarkdownDescription: "Operator of the condition, can be one of `EQUAL`, `GREATER_THAN`, `LESS_THAN`, `LESS_THAN_INCLUSIVE` `CONTAINS`, `GREATER_THAN_INCLUSIVE`, `NOT_CONTAINS`, `NOT_EQUAL`,  `REGEX`, `PERCENTAGE_SPLIT`,  `MODULO`, `IS_SET`, `IS_NOT_SET`, `IN` ",
+				},
+				"value": schema.StringAttribute{
+					Optional:            true,
+					MarkdownDescription: "Value of the condition",
+				},
+			},
 		},
-		"conditions": {
-			Optional:            true,
-			MarkdownDescription: "List of conditions for the nested rule",
-			Attributes:          conditions,
-		},
-	})
+	}
 
-	return tfsdk.Schema{
+	nestedRules := schema.ListNestedAttribute{
+		Optional: true,
+		MarkdownDescription: "List of Nested Rules",
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
+				"type": schema.StringAttribute{
+					Required:            true,
+					MarkdownDescription: "Type of the rule",
+				},
+				"conditions": conditions,
+			},
+		},
+	}
+
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Segment",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the segment",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"uuid": {
+			"uuid": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "UUID of the segment",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.StringType,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"project_id": {
+			"project_id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the project",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"feature_id": {
+
+			"feature_id": schema.Int64Attribute{
 				Computed:            true,
 				Optional:            true,
 				MarkdownDescription: "Set this to create a feature specific segment",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"name": {
+			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Name of the segment",
-				Type:                types.StringType,
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Description of the segment",
-				Type:                types.StringType,
 			},
-			"project_uuid": {
+			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the segment belongs to",
 				Required:            true,
-				Type:                types.StringType,
 			},
-			"rules": {
+			"rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Rules for the segment",
 				Required:            true,
-				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
-					"type": {
-						Required:            true,
-						MarkdownDescription: "Type of the rule, can be of: `ALL`, `ANY`, `NONE`",
-						Type:                types.StringType,
-					},
-					"rules": {
-						Optional:            true,
-						MarkdownDescription: "List of Nested Rules",
-						Attributes:          nestedRules,
-					},
 
-					"conditions": {
-						Optional:            true,
-						MarkdownDescription: "Conditions for the rule",
-						Attributes:          conditions,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "Type of the rule, can be of: `ALL`, `ANY`, `NONE`",
+						},
+						"rules": nestedRules,
+
+						"conditions": conditions,
 					},
-				}),
+				},
 			},
 		},
-	}, nil
+	}
 
 }
-
-
 
 func (r *segmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data SegmentResourceData

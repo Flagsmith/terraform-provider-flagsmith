@@ -3,14 +3,16 @@ package flagsmith
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/Flagsmith/flagsmith-go-api-client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -29,7 +31,6 @@ func (r *featureResource) Metadata(ctx context.Context, req resource.MetadataReq
 	resp.TypeName = req.ProviderTypeName + "_feature"
 }
 
-
 func (r *featureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
@@ -47,95 +48,69 @@ func (r *featureResource) Configure(ctx context.Context, req resource.ConfigureR
 
 	r.client = client
 }
-func (t *featureResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Flagsmith Feature/ Remote config",
 
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
+		Attributes: map[string]schema.Attribute{
+			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the feature",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"uuid": {
+			"uuid": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "UUID of the feature",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.StringType,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"project_id": {
+			"project_id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the project",
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
-				Type: types.Int64Type,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
-			"feature_name": {
+			"feature_name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Name of the feature",
-				Type:                types.StringType,
 			},
-			"type": {
+			"type": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Type of the feature, can be STANDARD, or MULTIVARIATE",
-				Type:                types.StringType,
 			},
-			"default_enabled": {
+			"default_enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "Determines if the feature is enabled by default. If unspecified, it will default to false",
-				Type:                types.BoolType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-					BoolDefaultModifier{Default: false},
-				},
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
-			"initial_value": {
+			"initial_value": schema.StringAttribute{
 				Computed:            true,
 				Optional:            true,
 				MarkdownDescription: "Determines the initial value of the feature.",
-				Type:                types.StringType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-				},
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"description": {
+			"description": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Description of the feature",
-				Type:                types.StringType,
 			},
-			"is_archived": {
+			"is_archived": schema.BoolAttribute{
 				Computed:            true,
 				Optional:            true,
 				MarkdownDescription: "Can be used to archive/unarchive a feature. If unspecified, it will default to false",
-				Type:                types.BoolType,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.UseStateForUnknown(),
-					BoolDefaultModifier{Default: false},
-				},
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
-			"owners": {
+			"owners": schema.SetAttribute{
 				Optional:            true,
-				Type:                types.SetType{ElemType: types.Int64Type},
+				ElementType:         types.Int64Type,
 				MarkdownDescription: "List of user IDs who are owners of the feature",
 			},
-			"project_uuid": {
+			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the feature belongs to",
 				Required:            true,
-				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}
 }
-
-
 
 func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureResourceData

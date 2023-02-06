@@ -27,7 +27,7 @@ resource "flagsmith_feature_state" "feature_1_dev" {
   feature_id      = flagsmith_feature.new_standard_feature.id
   feature_state_value = {
     type         = "unicode"
-    string_value = "some_flag_value"
+    string_value = "some_flag_value" # leave it as empty string("") if you don't want to set any value
   }
 
 }
@@ -71,10 +71,10 @@ resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
 - `enabled` (Boolean) Used for enabling/disabling the feature
 - `environment_key` (String) Client side environment key associated with the environment
 - `feature_id` (Number) ID of the feature
+- `feature_state_value` (Attributes) Value for the feature State. NOTE: One of string_value, integer_value or boolean_value must be set (see [below for nested schema](#nestedatt--feature_state_value))
 
 ### Optional
 
-- `feature_state_value` (Attributes) (see [below for nested schema](#nestedatt--feature_state_value))
 - `segment_id` (Number) ID of the segment, used for creating segment overrides
 - `segment_priority` (Number) Priority of the segment overrides.
 
@@ -88,12 +88,15 @@ resource "flagsmith_feature_state" "feature_1_dev_segment_override" {
 <a id="nestedatt--feature_state_value"></a>
 ### Nested Schema for `feature_state_value`
 
+Required:
+
+- `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
+
 Optional:
 
 - `boolean_value` (Boolean) Boolean value of the feature if the type is `bool`
 - `integer_value` (Number) Integer value of the feature if the type is `int`
-- `string_value` (String) String value of the feature if the type is `unicode`
-- `type` (String) Type of the feature state value, can be `unicode`, `int` or `bool`
+- `string_value` (String) String value of the feature if the type is `unicode`.
 
 ## Import
 

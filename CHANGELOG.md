@@ -1,3 +1,15 @@
+## 0.4.0
+ENHANCEMENTS:
+* Update terraform-plugin-framework
+
+BUG_FIXES
+* fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/56
+
+BREAKING CHANGES:
+* resource(feature_state): make feature_state_value required
+* resource(feature_state): make feature_state_value.type required
+
+
 ## 0.3.0
 BREAKING CHANGES:
 * resource: update import of `flagsmith_feature_state` from `<enviroment_client_key>,<feature_name>` to `<enviroment_client_key>,<feature_state_uuid>`
