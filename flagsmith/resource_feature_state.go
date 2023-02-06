@@ -86,7 +86,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 
 					},
 					"string_value": schema.StringAttribute{
-						MarkdownDescription: "String value of the feature if the type is `unicode`. NOTE: Leave it as an empty string('') if feature value is not going to be used",
+						MarkdownDescription: "String value of the feature if the type is `unicode`.",
 						Optional:            true,
 					},
 					"integer_value": schema.Int64Attribute{

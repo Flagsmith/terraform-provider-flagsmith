@@ -27,7 +27,7 @@ resource "flagsmith_feature_state" "feature_1_dev" {
   feature_id      = flagsmith_feature.new_standard_feature.id
   feature_state_value = {
     type         = "unicode"
-    string_value = "some_flag_value"
+    string_value = "some_flag_value" # leave it as empty string("") if you don't want to set any value
   }
 
 }
@@ -96,7 +96,7 @@ Optional:
 
 - `boolean_value` (Boolean) Boolean value of the feature if the type is `bool`
 - `integer_value` (Number) Integer value of the feature if the type is `int`
-- `string_value` (String) String value of the feature if the type is `unicode`. NOTE: Leave it as an empty string('') if feature value is not going to be used
+- `string_value` (String) String value of the feature if the type is `unicode`.
 
 ## Import
 
