@@ -1,3 +1,7 @@
+## 0.4.1
+BUG_FIXES
+* fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/60
+
 ## 0.4.0
 ENHANCEMENTS:
 * Update terraform-plugin-framework
