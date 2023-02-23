@@ -3,14 +3,21 @@ package flagsmith_test
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"strings"
 	"testing"
 )
 
 func TestAccFeatureResource(t *testing.T) {
-	featureName :=  acctest.RandString(16)
+	featureName := acctest.RandString(16)
+	firstUserID := 3936
+	secondUserID := 12662
+	thirdUserID := 11871
+
+	initialOwners := []int{firstUserID, secondUserID}
+	updatedOwners := []int{firstUserID, thirdUserID}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -19,13 +26,15 @@ func TestAccFeatureResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccFeatureResourceConfig(featureName, "new feature description"),
+				Config: testAccFeatureResourceConfig(featureName, "new feature description", initialOwners),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "new feature description"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", secondUserID)),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
@@ -44,6 +53,8 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "default_enabled", "false"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "is_archived", "false"),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", secondUserID)),
 
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
@@ -53,19 +64,78 @@ func TestAccFeatureResource(t *testing.T) {
 
 			// Update testing
 			{
-				Config: testAccFeatureResourceConfig(featureName, "feature description updated"),
+				Config: testAccFeatureResourceConfig(featureName, "feature description updated", updatedOwners),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "feature description updated"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", thirdUserID)),
 				),
 			},
 		},
 	})
 }
 
+func TestAccFeatureResourceOwners(t *testing.T) {
+	featureName := acctest.RandString(16)
+	firstUserID := 3936
+	secondUserID := 12662
+	thirdUserID := 11871
 
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureResourceDestroy,
 
+		Steps: []resource.TestStep{
+			// Create without owners
+			{
+				Config: testAccFeatureResourceConfig(featureName, "new feature description", []int{}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.#", "0"),
+				),
+			},
+
+			// ImportState without owners
+			{
+				ResourceName:      "flagsmith_feature.test_feature",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: getFeatureImportID("flagsmith_feature.test_feature"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.#", "0"),
+				),
+			},
+
+			// UpdateState - Add owners
+			{
+				Config: testAccFeatureResourceConfig(featureName, "feature description updated", []int{firstUserID, secondUserID}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", secondUserID)),
+				),
+			},
+
+			// UpdateState - Update owners
+			{
+				Config: testAccFeatureResourceConfig(featureName, "feature description updated", []int{firstUserID, thirdUserID}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", thirdUserID)),
+				),
+			},
+			// UpdateState - Remove all owners
+			{
+				Config: testAccFeatureResourceConfig(featureName, "feature description updated", []int{}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.#", "0"),
+				),
+			},
+		},
+	})
+}
 func getFeatureImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		return getUUIDfromState(s, n)
@@ -84,8 +154,6 @@ func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
 	}
 	return nil
 
-
-
 }
 
 func getUUIDfromState(s *terraform.State, resourceName string) (string, error) {
@@ -102,8 +170,7 @@ func getUUIDfromState(s *terraform.State, resourceName string) (string, error) {
 	return uuid, nil
 }
 
-
-func testAccFeatureResourceConfig(featureName, description string) string {
+func testAccFeatureResourceConfig(featureName, description string, owners []int) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
@@ -114,8 +181,8 @@ resource "flagsmith_feature" "test_feature" {
   description = "%s"
   project_uuid = "%s"
   type = "STANDARD"
+  owners = %s
 }
 
-`, featureName, description, projectUUID())
+`, featureName, description, projectUUID(), strings.Join(strings.Fields(fmt.Sprint(owners)), ","))
 }
-

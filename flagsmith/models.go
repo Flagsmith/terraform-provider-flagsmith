@@ -236,6 +236,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		DefaultEnabled: f.DefaultEnabled.ValueBool(),
 		IsArchived:     f.IsArchived.ValueBool(),
 		ProjectUUID:    f.ProjectUUID.ValueString(),
+		Owners: &[]int64{},
 	}
 	if !f.ID.IsNull() && !f.ID.IsUnknown() {
 		featureID := f.ID.ValueInt64()
@@ -245,8 +246,11 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		projectID := f.ProjectID.ValueInt64()
 		feature.ProjectID = &projectID
 	}
+	if f.Owners == nil {
+	      feature.Owners = nil
+	}
 
-	if f.Owners != nil {
+	if f.Owners != nil && len(*f.Owners) > 0 {
 		for _, owner := range *f.Owners {
 			ownerID := owner.ValueInt64()
 			*feature.Owners = append(*feature.Owners, ownerID)
@@ -268,11 +272,17 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		InitialValue:   types.StringValue(clientFeature.InitialValue),
 		ProjectID:      types.Int64Value(*clientFeature.ProjectID),
 		ProjectUUID:    types.StringValue(clientFeature.ProjectUUID),
+		Owners:        &[]types.Int64{},
 	}
 	if clientFeature.Description != nil {
 		resourceData.Description = types.StringValue(*clientFeature.Description)
 	}
-	if clientFeature.Owners != nil {
+
+	if clientFeature.Owners == nil {
+		resourceData.Owners = nil
+	}
+
+	if clientFeature.Owners != nil && len(*clientFeature.Owners) > 0 {
 		for _, owner := range *clientFeature.Owners {
 			*resourceData.Owners = append(*resourceData.Owners, types.Int64Value(owner))
 		}
