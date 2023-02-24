@@ -102,7 +102,7 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"owners": schema.SetAttribute{
 				Optional:            true,
 				ElementType:         types.Int64Type,
-				MarkdownDescription: "List of user IDs who are owners of the feature",
+				MarkdownDescription: "List of user IDs representing the owners of the feature.",
 			},
 			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the feature belongs to",
@@ -122,6 +122,7 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	clientFeature := data.ToClientFeature()
+	owners := clientFeature.Owners
 
 	// Create the feature
 	err := r.client.CreateFeature(clientFeature)
@@ -130,6 +131,15 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature, got error: %s", err))
 		return
 	}
+	if owners != nil && len(*owners) > 0 {
+		err := r.client.AddFeatureOwners(clientFeature, *owners)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to add owners to feature, got error: %s", err))
+			return
+		}
+
+	}
+	clientFeature.Owners = owners
 	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
 	diags = resp.State.Set(ctx, &resourceData)
@@ -149,6 +159,11 @@ func (r *featureResource) Read(ctx context.Context, req resource.ReadRequest, re
 	feature, err := r.client.GetFeature(data.UUID.ValueString())
 	if err != nil {
 		panic(err)
+	}
+	// This prevents creating unnecessary plan change(from [] -> nil)
+	// when owners is not part of the plan
+	if data.Owners == nil && len(*feature.Owners) == 0 {
+		feature.Owners = nil
 	}
 	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
 
@@ -179,6 +194,7 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 	// Generate API request body from plan
 	clientFeature := plan.ToClientFeature()
+	planOwners := clientFeature.Owners
 
 	err := r.client.UpdateFeature(clientFeature)
 	if err != nil {
@@ -186,6 +202,27 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Update feature owners
+	if planOwners != clientFeature.Owners {
+		ownerIDsToRemove := Difference(clientFeature.Owners, planOwners)
+		if len(ownerIDsToRemove) > 0 {
+		  err := r.client.RemoveFeatureOwners(clientFeature, ownerIDsToRemove)
+		  if err != nil {
+			  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove feature owners, got error: %s", err))
+			  return
+		  }
+		}
+		ownerIDsToAdd := Difference(planOwners, clientFeature.Owners)
+
+		if len(ownerIDsToAdd) > 0 {
+			err := r.client.AddFeatureOwners(clientFeature, ownerIDsToAdd)
+			if err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to add feature owners, got error: %s", err))
+				return
+			}
+		}
+	}
+	clientFeature.Owners = planOwners
 	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
 	// Update the state with the new values
@@ -194,6 +231,7 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(diags...)
 
 }
+
 
 func (r *featureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Get current state
