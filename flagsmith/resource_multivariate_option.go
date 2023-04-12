@@ -143,6 +143,10 @@ func (r *multivariateResource) Read(ctx context.Context, req resource.ReadReques
 
 	mvOption, err := r.client.GetFeatureMVOption(data.FeatureUUID.ValueString(), data.UUID.ValueString())
 	if err != nil {
+		if _, ok := err.(flagsmithapi.FeatureMVOptionNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
 	}
 	resourceData := NewMultivariateOptionFromClientOption(mvOption)

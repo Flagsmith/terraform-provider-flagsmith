@@ -49,7 +49,7 @@ func (r *segmentResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	conditions := schema.ListNestedAttribute{
-		Optional: true,
+		Optional:            true,
 		MarkdownDescription: "List of Conditions for the nested Rule",
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: map[string]schema.Attribute{
@@ -71,7 +71,7 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 
 	nestedRules := schema.ListNestedAttribute{
-		Optional: true,
+		Optional:            true,
 		MarkdownDescription: "List of Nested Rules",
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: map[string]schema.Attribute{
@@ -180,7 +180,12 @@ func (r *segmentResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	segment, err := r.client.GetSegment(data.UUID.ValueString())
 	if err != nil {
+		if _, ok := err.(flagsmithapi.SegmentNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
+
 	}
 	resourceData := MakeSegmentResourceDataFromClientSegment(segment)
 

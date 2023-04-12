@@ -158,11 +158,16 @@ func (r *featureResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	feature, err := r.client.GetFeature(data.UUID.ValueString())
 	if err != nil {
+		if _, ok := err.(flagsmithapi.FeatureNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
+
 	}
 	// This prevents creating unnecessary plan change(from [] -> nil)
 	// when owners is not part of the plan
-	if data.Owners == nil && len(*feature.Owners) == 0 {
+	if data.Owners == nil && feature.Owners != nil && len(*feature.Owners) == 0 {
 		feature.Owners = nil
 	}
 	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
