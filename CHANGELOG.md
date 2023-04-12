@@ -1,3 +1,8 @@
+## 0.4.2
+BUG_FIXES
+* fix provider crash on `terraform plan` if resource are deleted outside of terraform
+* fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/68
+
 ## 0.4.1
 BUG_FIXES
 * fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/60
