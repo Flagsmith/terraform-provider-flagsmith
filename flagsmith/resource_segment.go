@@ -122,6 +122,7 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the segment belongs to",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Rules for the segment",
