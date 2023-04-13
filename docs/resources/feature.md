@@ -35,7 +35,6 @@ resource "flagsmith_feature" "new_standard_feature" {
 
 - `feature_name` (String) Name of the feature
 - `project_uuid` (String) UUID of project the feature belongs to
-- `type` (String) Type of the feature, can be STANDARD, or MULTIVARIATE
 
 ### Optional
 
@@ -44,6 +43,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 - `initial_value` (String) Determines the initial value of the feature.
 - `is_archived` (Boolean) Can be used to archive/unarchive a feature. If unspecified, it will default to false
 - `owners` (Set of Number) List of user IDs representing the owners of the feature.
+- `type` (String) Type of the feature, can be STANDARD, or MULTIVARIATE. if unspecified, it will default to STANDARD
 
 ### Read-Only
 

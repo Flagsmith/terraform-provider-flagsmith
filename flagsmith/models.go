@@ -226,6 +226,9 @@ type FeatureResourceData struct {
 
 func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 	typeValue := f.Type.ValueString()
+	if typeValue == "" {
+		typeValue = "STANDARD"
+	}
 	descriptionValue := f.Description.ValueString()
 	feature := flagsmithapi.Feature{
 		UUID:           f.UUID.ValueString(),
