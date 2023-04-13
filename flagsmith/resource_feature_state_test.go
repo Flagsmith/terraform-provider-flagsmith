@@ -20,7 +20,7 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 			// Test feature State value validator
 			{
 				Config: testAccInvalidFeatureStateValueConfig(),
-				ExpectError: regexp.MustCompile(`Invalid feature_state_value`),
+				ExpectError: regexp.MustCompile(`Exactly one of these attributes must be configured:\n\[feature_state_value.string_value,feature_state_value.integer_value,feature_state_value.boolean_value\]`),
 
 			},
 
