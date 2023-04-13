@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -76,8 +76,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 				Required:            true,
 			},
 			"feature_state_value": schema.SingleNestedAttribute{
-				Required:            true,
-				Validators:          []validator.Object{validateFeatureStateValue()},
+				Required: true,
 				MarkdownDescription: "Value for the feature State. NOTE: One of string_value, integer_value or boolean_value must be set",
 				Attributes: map[string]schema.Attribute{
 					"type": schema.StringAttribute{
@@ -125,7 +124,15 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 		},
 	}
 }
-
+func (f featureStateResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+    return []resource.ConfigValidator{
+        resourcevalidator.ExactlyOneOf(
+            path.MatchRoot("feature_state_value").AtName("string_value"),
+            path.MatchRoot("feature_state_value").AtName("integer_value"),
+            path.MatchRoot("feature_state_value").AtName("boolean_value"),
+        ),
+    }
+}
 func (r *featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureStateResourceData
 
