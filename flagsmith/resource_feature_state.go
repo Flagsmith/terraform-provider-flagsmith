@@ -223,7 +223,12 @@ func (r *featureStateResource) Read(ctx context.Context, req resource.ReadReques
 		featureState, err = r.client.GetEnvironmentFeatureState(data.EnvironmentKey.ValueString(), data.Feature.ValueInt64())
 	}
 	if err != nil {
+		if _, ok := err.(flagsmithapi.FeatureStateNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
+
 	}
 	resourceData := MakeFeatureStateResourceDataFromClientFS(featureState)
 

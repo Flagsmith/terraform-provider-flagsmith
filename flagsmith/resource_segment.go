@@ -194,7 +194,12 @@ func (r *segmentResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	segment, err := r.client.GetSegment(data.UUID.ValueString())
 	if err != nil {
+		if _, ok := err.(flagsmithapi.SegmentNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
+
 	}
 	resourceData := MakeSegmentResourceDataFromClientSegment(segment)
 
