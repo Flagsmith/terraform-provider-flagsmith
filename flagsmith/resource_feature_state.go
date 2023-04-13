@@ -60,7 +60,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the featurestate",
-				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"uuid": schema.StringAttribute{
 				Computed:            true,
@@ -82,7 +82,6 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
 						Required:            true,
-
 					},
 					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`.",
@@ -213,7 +212,12 @@ func (r *featureStateResource) Read(ctx context.Context, req resource.ReadReques
 		featureState, err = r.client.GetEnvironmentFeatureState(data.EnvironmentKey.ValueString(), data.Feature.ValueInt64())
 	}
 	if err != nil {
+		if _, ok := err.(flagsmithapi.FeatureStateNotFoundError); ok {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		panic(err)
+
 	}
 	resourceData := MakeFeatureStateResourceDataFromClientFS(featureState)
 
