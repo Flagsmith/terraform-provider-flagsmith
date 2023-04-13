@@ -11,11 +11,13 @@ import (
 	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 )
 
@@ -85,6 +87,9 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
 						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf([]string{"unicode", "int", "bool"}...),
+						},
 					},
 					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`.",
@@ -128,7 +133,8 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 		},
 	}
 }
-func (f featureStateResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+
+func (f *featureStateResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
     return []resource.ConfigValidator{
         resourcevalidator.ExactlyOneOf(
             path.MatchRoot("feature_state_value").AtName("string_value"),
@@ -137,6 +143,7 @@ func (f featureStateResource) ConfigValidators(ctx context.Context) []resource.C
         ),
     }
 }
+
 func (r *featureStateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data FeatureStateResourceData
 
