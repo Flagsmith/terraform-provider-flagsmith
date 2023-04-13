@@ -10,6 +10,8 @@ import (
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -70,10 +72,12 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"environment_key": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Client side environment key associated with the environment",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"feature_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the feature",
 				Required:            true,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.RequiresReplace()},
 			},
 			"feature_state_value": schema.SingleNestedAttribute{
 				Required: true,
@@ -115,6 +119,8 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"segment_priority": schema.Int64Attribute{
 				MarkdownDescription: "Priority of the segment overrides.",
 				Optional:            true,
+				Computed: true,
+				Default: int64default.StaticInt64(0),
 			},
 			"feature_segment_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the feature_segment, used internally to bind a feature state to a segment",
