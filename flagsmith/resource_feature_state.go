@@ -11,7 +11,6 @@ import (
 	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -62,7 +61,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "ID of the featurestate",
-				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"uuid": schema.StringAttribute{
 				Computed:            true,
@@ -86,7 +85,6 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 					"type": schema.StringAttribute{
 						MarkdownDescription: "Type of the feature state value, can be `unicode`, `int` or `bool`",
 						Required:            true,
-
 					},
 					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`.",
@@ -119,8 +117,7 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"segment_priority": schema.Int64Attribute{
 				MarkdownDescription: "Priority of the segment overrides.",
 				Optional:            true,
-				Computed: true,
-				Default: int64default.StaticInt64(0),
+				Computed:            true,
 			},
 			"feature_segment_id": schema.Int64Attribute{
 				MarkdownDescription: "ID of the feature_segment, used internally to bind a feature state to a segment",

@@ -95,11 +95,7 @@ func (f *FeatureStateResourceData) ToClientFS() *flagsmithapi.FeatureState {
 	if !f.SegmentPriority.IsNull() && !f.SegmentPriority.IsUnknown() {
 		int64SegmentPriority := f.SegmentPriority.ValueInt64()
 		fs.SegmentPriority = &int64SegmentPriority
-	} else {
-		fs.SegmentPriority = new(int64)
-
 	}
-
 	environment := f.Environment.ValueInt64()
 	if environment != 0 {
 		fs.Environment = &environment
