@@ -96,6 +96,7 @@ func (t *multivariateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"feature_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of the feature to which the multivariate option belongs",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"project_id": schema.Int64Attribute{
 				Computed:            true,
