@@ -9,10 +9,14 @@ import (
 	"strings"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -71,6 +75,9 @@ func (t *multivariateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"type": schema.StringAttribute{
 				MarkdownDescription: "Type of the multivariate option can be `unicode`, `int` or `bool`",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf([]string{"unicode", "int", "bool"}...),
+				},
 			},
 			"string_value": schema.StringAttribute{
 				MarkdownDescription: "String value of the multivariate option if the type is `unicode`",
@@ -96,12 +103,23 @@ func (t *multivariateResource) Schema(ctx context.Context, req resource.SchemaRe
 			"feature_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of the feature to which the multivariate option belongs",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"project_id": schema.Int64Attribute{
 				Computed:            true,
 				MarkdownDescription: "Project ID of the feature to which the multivariate option belongs",
 			},
 		},
+	}
+}
+
+func (f *multivariateResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("string_value"),
+			path.MatchRoot("integer_value"),
+			path.MatchRoot("boolean_value"),
+		),
 	}
 }
 

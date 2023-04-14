@@ -96,7 +96,6 @@ func (f *FeatureStateResourceData) ToClientFS() *flagsmithapi.FeatureState {
 		int64SegmentPriority := f.SegmentPriority.ValueInt64()
 		fs.SegmentPriority = &int64SegmentPriority
 	}
-
 	environment := f.Environment.ValueInt64()
 	if environment != 0 {
 		fs.Environment = &environment
@@ -132,7 +131,6 @@ func MakeFeatureStateResourceDataFromClientFS(clientFS *flagsmithapi.FeatureStat
 			segment := types.Int64Value(*clientFS.Segment)
 			fs.Segment = segment
 		}
-
 
 	}
 	return fs
@@ -226,6 +224,9 @@ type FeatureResourceData struct {
 
 func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 	typeValue := f.Type.ValueString()
+	if typeValue == "" {
+		typeValue = "STANDARD"
+	}
 	descriptionValue := f.Description.ValueString()
 	feature := flagsmithapi.Feature{
 		UUID:           f.UUID.ValueString(),
@@ -236,7 +237,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		DefaultEnabled: f.DefaultEnabled.ValueBool(),
 		IsArchived:     f.IsArchived.ValueBool(),
 		ProjectUUID:    f.ProjectUUID.ValueString(),
-		Owners: &[]int64{},
+		Owners:         &[]int64{},
 	}
 	if !f.ID.IsNull() && !f.ID.IsUnknown() {
 		featureID := f.ID.ValueInt64()
@@ -247,7 +248,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		feature.ProjectID = &projectID
 	}
 	if f.Owners == nil {
-	      feature.Owners = nil
+		feature.Owners = nil
 	}
 
 	if f.Owners != nil && len(*f.Owners) > 0 {
@@ -272,7 +273,7 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		InitialValue:   types.StringValue(clientFeature.InitialValue),
 		ProjectID:      types.Int64Value(*clientFeature.ProjectID),
 		ProjectUUID:    types.StringValue(clientFeature.ProjectUUID),
-		Owners:        &[]types.Int64{},
+		Owners:         &[]types.Int64{},
 	}
 	if clientFeature.Description != nil {
 		resourceData.Description = types.StringValue(*clientFeature.Description)

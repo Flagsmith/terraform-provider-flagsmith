@@ -7,10 +7,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -74,14 +79,20 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 				MarkdownDescription: "Name of the feature",
 			},
 			"type": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Type of the feature, can be STANDARD, or MULTIVARIATE",
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Type of the feature, can be STANDARD, or MULTIVARIATE. if unspecified, it will default to STANDARD",
+				Default:             stringdefault.StaticString("STANDARD"),
+				Validators: []validator.String{
+					stringvalidator.OneOf([]string{"STANDARD", "MULTIVARIATE"}...),
+				},
 			},
 			"default_enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "Determines if the feature is enabled by default. If unspecified, it will default to false",
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.RequiresReplace()},
 			},
 			"initial_value": schema.StringAttribute{
 				Computed:            true,
@@ -107,6 +118,7 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the feature belongs to",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 		},
 	}
@@ -121,6 +133,7 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	clientFeature := data.ToClientFeature()
 	owners := clientFeature.Owners
 
@@ -139,6 +152,7 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 
 	}
+
 	clientFeature.Owners = owners
 	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
@@ -211,11 +225,11 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	if planOwners != clientFeature.Owners {
 		ownerIDsToRemove := Difference(clientFeature.Owners, planOwners)
 		if len(ownerIDsToRemove) > 0 {
-		  err := r.client.RemoveFeatureOwners(clientFeature, ownerIDsToRemove)
-		  if err != nil {
-			  resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove feature owners, got error: %s", err))
-			  return
-		  }
+			err := r.client.RemoveFeatureOwners(clientFeature, ownerIDsToRemove)
+			if err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove feature owners, got error: %s", err))
+				return
+			}
 		}
 		ownerIDsToAdd := Difference(planOwners, clientFeature.Owners)
 
@@ -236,7 +250,6 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(diags...)
 
 }
-
 
 func (r *featureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Get current state

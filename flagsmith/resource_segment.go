@@ -8,10 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/Flagsmith/flagsmith-go-api-client"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -61,6 +63,9 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 				"operator": schema.StringAttribute{
 					Required:            true,
 					MarkdownDescription: "Operator of the condition, can be one of `EQUAL`, `GREATER_THAN`, `LESS_THAN`, `LESS_THAN_INCLUSIVE` `CONTAINS`, `GREATER_THAN_INCLUSIVE`, `NOT_CONTAINS`, `NOT_EQUAL`,  `REGEX`, `PERCENTAGE_SPLIT`,  `MODULO`, `IS_SET`, `IS_NOT_SET`, `IN` ",
+					Validators: []validator.String{
+						stringvalidator.OneOf([]string{"EQUAL", "GREATER_THAN", "LESS_THAN", "LESS_THAN_INCLUSIVE", "CONTAINS", "GREATER_THAN_INCLUSIVE", "NOT_CONTAINS", "NOT_EQUAL", "REGEX", "PERCENTAGE_SPLIT", "MODULO", "IS_SET", "IS_NOT_SET", "IN"}...),
+					},
 				},
 				"value": schema.StringAttribute{
 					Optional:            true,
@@ -78,6 +83,9 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 				"type": schema.StringAttribute{
 					Required:            true,
 					MarkdownDescription: "Type of the rule",
+					Validators: []validator.String{
+						stringvalidator.OneOf([]string{"ALL", "ANY", "NONE"}...),
+					},
 				},
 				"conditions": conditions,
 			},
@@ -122,6 +130,7 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the segment belongs to",
 				Required:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Rules for the segment",
@@ -132,6 +141,11 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 						"type": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Type of the rule, can be of: `ALL`, `ANY`, `NONE`",
+							Validators: []validator.String{
+								stringvalidator.OneOf([]string{"ALL", "ANY", "NONE"}...),
+							},
+
+							// },
 						},
 						"rules": nestedRules,
 
