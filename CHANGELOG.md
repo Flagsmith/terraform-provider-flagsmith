@@ -1,3 +1,27 @@
+## 0.5.0
+BUG_FIXES
+* fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/76
+* fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/68
+
+ENHANCEMENTS:
+* resource(feature): Make `type` optional and use `STANDARD` as default value
+* resource(feature): Add default value(false) for `default_enabled`
+* resource(feature): Add RequiresReplace plan modifier to `project_uuid` field
+
+* resource(feature_state): Add RequiresReplace plan modifier to `environment_key` field
+* resource(feature_state): Add RequiresReplace plan modifier to `feature_id` field
+
+* resource(multivariate_options): Add RequiresReplace plan modifier to `feature_uuid`
+
+* resource(segment): Add RequiresReplace plan modifier to `project_uuid` field
+
+* Update Go module to GO 1.19
+* Update Terraform-plugin-framework
+* Update testify
+* Update terraform plugin sdk
+* Update terraform-plugin-go
+* Update terraform-plugin-docs
+
 ## 0.4.1
 BUG_FIXES
 * fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/60
