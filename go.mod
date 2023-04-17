@@ -1,6 +1,6 @@
 module github.com/Flagsmith/terraform-provider-flagsmith
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Flagsmith/flagsmith-go-api-client v0.6.0
