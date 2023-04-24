@@ -47,7 +47,11 @@ func MakeFeatureStateValueFromClientFSV(clientFSV *flagsmithapi.FeatureStateValu
 	}
 	switch fsvType {
 	case "unicode":
-		fsValue.StringValue = types.StringValue(*clientFSV.StringValue)
+		if clientFSV.StringValue == nil {
+			fsValue.StringValue = types.StringValue("")
+		} else {
+			fsValue.StringValue = types.StringValue(*clientFSV.StringValue)
+		}
 		return fsValue
 
 	case "int":
