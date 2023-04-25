@@ -1,3 +1,8 @@
+## 0.5.1
+BUG FIXES
+fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/81
+
+
 ## 0.5.0
 BUG_FIXES
 * fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/76
