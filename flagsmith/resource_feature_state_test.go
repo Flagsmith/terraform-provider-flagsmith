@@ -23,6 +23,12 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 				ExpectError: regexp.MustCompile(`Exactly one of these attributes must be configured:\n\[feature_state_value.string_value,feature_state_value.integer_value,feature_state_value.boolean_value\]`),
 
 			},
+			// Test feature State string value validator
+			{
+				Config: testAccEnvironmentFeatureStateResourceConfig(" some_value ", true),
+				ExpectError: regexp.MustCompile(`Attribute feature_state_value.string_value Leading and trailing whitespace is\n.*not allowed`),
+
+			},
 
 			// Create and Read testing
 			{
