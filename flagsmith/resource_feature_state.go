@@ -3,6 +3,7 @@ package flagsmith
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -94,6 +95,13 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 					"string_value": schema.StringAttribute{
 						MarkdownDescription: "String value of the feature if the type is `unicode`.",
 						Optional:            true,
+						Validators: []validator.String{
+							// Validate string value satisfies the regular expression for no leading or trailing whitespace
+							stringvalidator.RegexMatches(
+								regexp.MustCompile(`^\S[\s\S]*\S$`),
+								"Leading and trailing whitespace is not allowed",
+							),
+						},
 					},
 					"integer_value": schema.Int64Attribute{
 						MarkdownDescription: "Integer value of the feature if the type is `int`",
