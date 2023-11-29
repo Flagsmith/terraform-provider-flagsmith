@@ -1,6 +1,6 @@
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
-github.com/Flagsmith/flagsmith-go-api-client v0.7.0 h1:s78301OfgpiCht424WXjkS/VNaiBIKK+0PBgGL6wKeU=
-github.com/Flagsmith/flagsmith-go-api-client v0.7.0/go.mod h1:057wLgk8hRfEa/MJH6eW2VwVJ9eXQihwe/n2jZfqgpU=
+github.com/Flagsmith/flagsmith-go-api-client v0.7.1 h1:JV5L9MOP0xSpvdJ/kFslHD5giHoLhF500Hw02V8IN7M=
+github.com/Flagsmith/flagsmith-go-api-client v0.7.1/go.mod h1:rXk/ipXHVus0dvFrnhpYlbrCERpgY8UBhdLfOwpFwWo=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=

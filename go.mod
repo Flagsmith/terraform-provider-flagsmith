@@ -3,7 +3,7 @@ module github.com/Flagsmith/terraform-provider-flagsmith
 go 1.20
 
 require (
-	github.com/Flagsmith/flagsmith-go-api-client v0.7.0
+	github.com/Flagsmith/flagsmith-go-api-client v0.7.1
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
