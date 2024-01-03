@@ -98,12 +98,12 @@ func TestAccSegmentResource(t *testing.T) {
 
 func getSegmentImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		return getUUIDfromState(s, n)
+		return getAttributefromState(s, n, "uuid")
 	}
 }
 
 func testAccCheckSegmentResourceDestroy(s *terraform.State) error {
-	uuid, err := getUUIDfromState(s, "flagsmith_segment.test_segment")
+	uuid, err := getAttributefromState(s, "flagsmith_segment.test_segment", "uuid")
 	if err != nil {
 		return err
 	}

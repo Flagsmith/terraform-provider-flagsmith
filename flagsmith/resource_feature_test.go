@@ -138,12 +138,12 @@ func TestAccFeatureResourceOwners(t *testing.T) {
 }
 func getFeatureImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		return getUUIDfromState(s, n)
+		return getAttributefromState(s, n, "uuid")
 	}
 }
 
 func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
-	uuid, err := getUUIDfromState(s, "flagsmith_feature.test_feature")
+	uuid, err := getAttributefromState(s, "flagsmith_feature.test_feature", "uuid")
 	if err != nil {
 		return err
 	}
@@ -156,19 +156,6 @@ func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
 
 }
 
-func getUUIDfromState(s *terraform.State, resourceName string) (string, error) {
-	rs, ok := s.RootModule().Resources[resourceName]
-	if !ok {
-		return "", fmt.Errorf("not found: %s", resourceName)
-	}
-
-	uuid := rs.Primary.Attributes["uuid"]
-
-	if uuid == "" {
-		return "", fmt.Errorf("no uuid is set")
-	}
-	return uuid, nil
-}
 
 func testAccFeatureResourceConfig(featureName, description string, owners []int) string {
 	return fmt.Sprintf(`

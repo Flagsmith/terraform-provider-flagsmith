@@ -439,3 +439,53 @@ func MakeSegmentResourceDataFromClientSegment(clientSegment *flagsmithapi.Segmen
 	}
 	return resourceData
 }
+
+type TagResourceData struct {
+	ID          types.Int64  `tfsdk:"id"`
+	UUID        types.String `tfsdk:"uuid"`
+	Name        types.String `tfsdk:"tag_name"`
+	Description types.String `tfsdk:"description"`
+	ProjectID   types.Int64  `tfsdk:"project_id"`
+	ProjectUUID types.String `tfsdk:"project_uuid"`
+	Colour     types.String `tfsdk:"tag_colour"`
+
+}
+
+func (t *TagResourceData) ToClientTag() *flagsmithapi.Tag {
+	tag := flagsmithapi.Tag{
+		UUID:        t.UUID.ValueString(),
+		Name:        t.Name.ValueString(),
+		ProjectUUID: t.ProjectUUID.ValueString(),
+		Colour: t.Colour.ValueString(),
+
+	}
+	if t.Description.ValueString() != "" {
+		value := t.Description.ValueString()
+		tag.Description = &value
+	}
+	if !t.ID.IsNull() && !t.ID.IsUnknown() {
+		tagID := t.ID.ValueInt64()
+		tag.ID = &tagID
+	}
+	if !t.ProjectID.IsNull() && !t.ProjectID.IsUnknown() {
+		projectID := t.ProjectID.ValueInt64()
+		tag.ProjectID = &projectID
+	}
+	return &tag
+}
+
+func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceData {
+	resourceData := TagResourceData{
+		ID:          types.Int64Value(*clientTag.ID),
+		UUID:        types.StringValue(clientTag.UUID),
+		Name:        types.StringValue(clientTag.Name),
+		ProjectID:   types.Int64Value(*clientTag.ProjectID),
+		ProjectUUID: types.StringValue(clientTag.ProjectUUID),
+		Colour: types.StringValue(clientTag.Colour),
+	}
+	if clientTag.Description != nil {
+		resourceData.Description = types.StringValue(*clientTag.Description)
+	}
+
+	return resourceData
+}

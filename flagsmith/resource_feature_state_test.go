@@ -134,7 +134,7 @@ func TestAccSegmentFeatureStateResource(t *testing.T) {
 
 func getFeatureStateImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		uuid, err := getUUIDfromState(s, n)
+		uuid, err := getAttributefromState(s, n, "uuid")
 		if err != nil {
 			return "", err
 		}
@@ -144,7 +144,7 @@ func getFeatureStateImportID(n string) resource.ImportStateIdFunc {
 }
 
 func testAccCheckSegmentFeatureStateDestroy(s *terraform.State) error {
-	uuid, err := getUUIDfromState(s, "flagsmith_feature_state.dummy_environment_feature_x_segment_override")
+	uuid, err := getAttributefromState(s, "flagsmith_feature_state.dummy_environment_feature_x_segment_override", "uuid")
 	if err != nil {
 		return err
 	}
