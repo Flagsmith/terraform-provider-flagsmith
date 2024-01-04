@@ -222,6 +222,7 @@ type FeatureResourceData struct {
 	DefaultEnabled types.Bool     `tfsdk:"default_enabled"`
 	IsArchived     types.Bool     `tfsdk:"is_archived"`
 	Owners         *[]types.Int64 `tfsdk:"owners"`
+	Tags 	       *[]types.Int64 `tfsdk:"tags"`
 	ProjectID      types.Int64    `tfsdk:"project_id"`
 	ProjectUUID    types.String   `tfsdk:"project_uuid"`
 }
@@ -241,6 +242,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		DefaultEnabled: f.DefaultEnabled.ValueBool(),
 		IsArchived:     f.IsArchived.ValueBool(),
 		ProjectUUID:    f.ProjectUUID.ValueString(),
+		Tags:           []int64{},
 		Owners:         &[]int64{},
 	}
 	if !f.ID.IsNull() && !f.ID.IsUnknown() {
@@ -259,7 +261,12 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		for _, owner := range *f.Owners {
 			ownerID := owner.ValueInt64()
 			*feature.Owners = append(*feature.Owners, ownerID)
-
+		}
+	}
+	if f.Tags != nil {
+		for _, tag := range *f.Tags {
+			tagID := tag.ValueInt64()
+			feature.Tags = append(feature.Tags, tagID)
 		}
 	}
 	return &feature
@@ -290,6 +297,12 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 	if clientFeature.Owners != nil && len(*clientFeature.Owners) > 0 {
 		for _, owner := range *clientFeature.Owners {
 			*resourceData.Owners = append(*resourceData.Owners, types.Int64Value(owner))
+		}
+	}
+	if clientFeature.Tags != nil && len(clientFeature.Tags) > 0 {
+		resourceData.Tags = &[]types.Int64{}
+		for _, tag := range clientFeature.Tags {
+			*resourceData.Tags = append(*resourceData.Tags, types.Int64Value(tag))
 		}
 	}
 	return resourceData

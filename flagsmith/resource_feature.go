@@ -115,6 +115,11 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType:         types.Int64Type,
 				MarkdownDescription: "List of user IDs representing the owners of the feature.",
 			},
+			"tags": schema.SetAttribute{
+				Optional:            true,
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "List of tag IDs representing the tags attached to the feature.",
+			},
 			"project_uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of project the feature belongs to",
 				Required:            true,
