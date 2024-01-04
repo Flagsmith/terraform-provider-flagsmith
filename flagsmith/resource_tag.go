@@ -3,11 +3,11 @@ package flagsmith
 import (
 	"context"
 	"fmt"
-	"strings"
 	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,11 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-
 // Ensure provider defined types fully satisfy framework interfaces
 var _ resource.Resource = &tagResource{}
 var _ resource.ResourceWithImportState = &tagResource{}
-
 
 func newTagResource() resource.Resource {
 	return &tagResource{}
@@ -128,7 +126,7 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	tag , err := r.client.GetTag(data.ProjectUUID.ValueString(), data.UUID.ValueString())
+	tag, err := r.client.GetTag(data.ProjectUUID.ValueString(), data.UUID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read tag, got error: %s", err))
 		return
@@ -210,6 +208,5 @@ func (r *tagResource) ImportState(ctx context.Context, req resource.ImportStateR
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_uuid"), importKey[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("uuid"), importKey[1])...)
-
 
 }

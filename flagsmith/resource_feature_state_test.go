@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"regexp"
 	"strconv"
 	"testing"
-	"regexp"
 )
 
 func TestAccEnvironmentFeatureStateResource(t *testing.T) {
@@ -19,15 +19,13 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test feature State value validator
 			{
-				Config: testAccInvalidFeatureStateValueConfig(),
+				Config:      testAccInvalidFeatureStateValueConfig(),
 				ExpectError: regexp.MustCompile(`Exactly one of these attributes must be configured:\n\[feature_state_value.string_value,feature_state_value.integer_value,feature_state_value.boolean_value\]`),
-
 			},
 			// Test feature State string value validator
 			{
-				Config: testAccEnvironmentFeatureStateResourceConfig(" some_value ", true),
+				Config:      testAccEnvironmentFeatureStateResourceConfig(" some_value ", true),
 				ExpectError: regexp.MustCompile(`Attribute feature_state_value.string_value Leading and trailing whitespace is\n.*not allowed`),
-
 			},
 
 			// Create and Read testing
@@ -237,5 +235,5 @@ resource "flagsmith_feature_state" "dummy_environment_feature_x" {
   }
 }
 
-`,  environmentKey(), featureID())
+`, environmentKey(), featureID())
 }

@@ -78,7 +78,6 @@ func TestAccFeatureResource(t *testing.T) {
 
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", thirdUserID)),
-
 				),
 			},
 		},
@@ -163,7 +162,6 @@ func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
 	return nil
 
 }
-
 
 func testAccFeatureResourceConfig(featureName, description string, owners []int) string {
 	return fmt.Sprintf(`

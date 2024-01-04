@@ -1,4 +1,5 @@
 package flagsmith_test
+
 import (
 	"fmt"
 
@@ -29,7 +30,6 @@ func TestAccTagResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "project_id"),
-
 				),
 			},
 
@@ -64,16 +64,13 @@ func TestAccTagResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_tag.test_tag", "project_id"),
-
-
 				),
 			},
-
 		},
 	})
 }
 
-func testAccTagResourceConfig(tagName, tagColour,  description string) string {
+func testAccTagResourceConfig(tagName, tagColour, description string) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
@@ -86,12 +83,12 @@ resource "flagsmith_tag" "test_tag" {
   project_uuid = "%s"
 }
 
-`, tagName, tagColour, description, projectUUID() )
+`, tagName, tagColour, description, projectUUID())
 }
 
 func testAccCheckTagResourceDestroy(s *terraform.State) error {
-	uuid, err := getAttributefromState(s, "flagsmith_tag.test_tag","uuid")
-	projectUUID, err := getAttributefromState(s, "flagsmith_tag.test_tag","project_uuid")
+	uuid, err := getAttributefromState(s, "flagsmith_tag.test_tag", "uuid")
+	projectUUID, err := getAttributefromState(s, "flagsmith_tag.test_tag", "project_uuid")
 
 	if err != nil {
 		return err

@@ -222,7 +222,7 @@ type FeatureResourceData struct {
 	DefaultEnabled types.Bool     `tfsdk:"default_enabled"`
 	IsArchived     types.Bool     `tfsdk:"is_archived"`
 	Owners         *[]types.Int64 `tfsdk:"owners"`
-	Tags 	       *[]types.Int64 `tfsdk:"tags"`
+	Tags           *[]types.Int64 `tfsdk:"tags"`
 	ProjectID      types.Int64    `tfsdk:"project_id"`
 	ProjectUUID    types.String   `tfsdk:"project_uuid"`
 }
@@ -460,8 +460,7 @@ type TagResourceData struct {
 	Description types.String `tfsdk:"description"`
 	ProjectID   types.Int64  `tfsdk:"project_id"`
 	ProjectUUID types.String `tfsdk:"project_uuid"`
-	Colour     types.String `tfsdk:"tag_colour"`
-
+	Colour      types.String `tfsdk:"tag_colour"`
 }
 
 func (t *TagResourceData) ToClientTag() *flagsmithapi.Tag {
@@ -469,8 +468,7 @@ func (t *TagResourceData) ToClientTag() *flagsmithapi.Tag {
 		UUID:        t.UUID.ValueString(),
 		Name:        t.Name.ValueString(),
 		ProjectUUID: t.ProjectUUID.ValueString(),
-		Colour: t.Colour.ValueString(),
-
+		Colour:      t.Colour.ValueString(),
 	}
 	if t.Description.ValueString() != "" {
 		value := t.Description.ValueString()
@@ -494,7 +492,7 @@ func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceDa
 		Name:        types.StringValue(clientTag.Name),
 		ProjectID:   types.Int64Value(*clientTag.ProjectID),
 		ProjectUUID: types.StringValue(clientTag.ProjectUUID),
-		Colour: types.StringValue(clientTag.Colour),
+		Colour:      types.StringValue(clientTag.Colour),
 	}
 	if clientTag.Description != nil {
 		resourceData.Description = types.StringValue(*clientTag.Description)

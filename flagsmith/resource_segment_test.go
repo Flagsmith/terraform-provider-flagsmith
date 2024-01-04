@@ -3,16 +3,14 @@ package flagsmith_test
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
-
-
 func TestAccSegmentResource(t *testing.T) {
-	segmentName :=  acctest.RandString(16)
+	segmentName := acctest.RandString(16)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -27,17 +25,16 @@ func TestAccSegmentResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "description", "new segment description"),
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "project_uuid", projectUUID()),
 
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type","ALL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type","ANY"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator","EQUAL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property","device_type"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value","mobile"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type", "ALL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type", "ANY"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator", "EQUAL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property", "device_type"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value", "mobile"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "project_id"),
 					resource.TestCheckNoResourceAttr("flagsmith_segment.test_segment", "feature_id"),
-
 				),
 			},
 
@@ -53,18 +50,16 @@ func TestAccSegmentResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "description", "new segment description"),
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "project_uuid", projectUUID()),
 
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type","ALL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type","ANY"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator","EQUAL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property","device_type"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value","mobile"),
-
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type", "ALL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type", "ANY"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator", "EQUAL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property", "device_type"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value", "mobile"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "project_id"),
 					resource.TestCheckNoResourceAttr("flagsmith_segment.test_segment", "feature_id"),
-
 				),
 			},
 
@@ -76,25 +71,21 @@ func TestAccSegmentResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "description", "segment description updated"),
 					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "project_uuid", projectUUID()),
 
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type","ALL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type","ANY"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator","EQUAL"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property","device_type"),
-					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value","mobile"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.type", "ALL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.type", "ANY"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.operator", "EQUAL"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property", "device_type"),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value", "mobile"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "project_id"),
 					resource.TestCheckNoResourceAttr("flagsmith_segment.test_segment", "feature_id"),
-
-
 				),
 			},
 		},
 	})
 }
-
-
 
 func getSegmentImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
@@ -114,10 +105,7 @@ func testAccCheckSegmentResourceDestroy(s *terraform.State) error {
 	}
 	return nil
 
-
-
 }
-
 
 func testAccSegmentResourceConfig(segmentName, description string) string {
 	return fmt.Sprintf(`
@@ -149,5 +137,3 @@ resource "flagsmith_segment" "test_segment" {
 
 `, segmentName, description, projectUUID())
 }
-
-
