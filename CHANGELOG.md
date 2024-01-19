@@ -1,3 +1,15 @@
+## 0.7.0
+FEATURES:
+* Add resource `flagsmith_tag`
+* Update resource `flagsmith_feature` to add support for tags
+
+BUG FIXES
+fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/67
+
+## 0.6.0
+NOTES:
+* This Go module(and related dependencies) has been updated to GO 1.20 as per the Go Support policy
+
 ## 0.5.1
 BUG FIXES
 fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/81
