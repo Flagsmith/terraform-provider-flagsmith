@@ -52,7 +52,7 @@ func (r *tagResource) Configure(ctx context.Context, req resource.ConfigureReque
 func (t *tagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith Feature/ Remote config",
+		MarkdownDescription: "Flagsmith Tag",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
