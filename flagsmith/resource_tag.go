@@ -103,7 +103,6 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	clientTag := data.ToClientTag()
 
-	// Create the feature
 	err := r.client.CreateTag(clientTag)
 
 	if err != nil {
