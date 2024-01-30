@@ -36,6 +36,8 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", secondUserID)),
 
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "tags.0"),
+
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
@@ -56,6 +58,8 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", secondUserID)),
 
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "tags.0"),
+
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "uuid"),
 					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "project_id"),
@@ -69,6 +73,8 @@ func TestAccFeatureResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "description", "feature description updated"),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "project_uuid", projectUUID()),
+
+					resource.TestCheckResourceAttrSet("flagsmith_feature.test_feature", "tags.0"),
 
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.0", fmt.Sprintf("%d", firstUserID)),
 					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "owners.1", fmt.Sprintf("%d", thirdUserID)),
@@ -136,14 +142,15 @@ func TestAccFeatureResourceOwners(t *testing.T) {
 		},
 	})
 }
+
 func getFeatureImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		return getUUIDfromState(s, n)
+		return getAttributefromState(s, n, "uuid")
 	}
 }
 
 func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
-	uuid, err := getUUIDfromState(s, "flagsmith_feature.test_feature")
+	uuid, err := getAttributefromState(s, "flagsmith_feature.test_feature", "uuid")
 	if err != nil {
 		return err
 	}
@@ -156,24 +163,15 @@ func testAccCheckFeatureResourceDestroy(s *terraform.State) error {
 
 }
 
-func getUUIDfromState(s *terraform.State, resourceName string) (string, error) {
-	rs, ok := s.RootModule().Resources[resourceName]
-	if !ok {
-		return "", fmt.Errorf("not found: %s", resourceName)
-	}
-
-	uuid := rs.Primary.Attributes["uuid"]
-
-	if uuid == "" {
-		return "", fmt.Errorf("no uuid is set")
-	}
-	return uuid, nil
-}
-
 func testAccFeatureResourceConfig(featureName, description string, owners []int) string {
 	return fmt.Sprintf(`
 provider "flagsmith" {
 
+}
+resource "flagsmith_tag" "test_tag" {
+  tag_name = "feature_acc_test_tag"
+  tag_colour = "#000000"
+  project_uuid = "%s"
 }
 
 resource "flagsmith_feature" "test_feature" {
@@ -182,7 +180,8 @@ resource "flagsmith_feature" "test_feature" {
   project_uuid = "%s"
   type = "STANDARD"
   owners = %s
+  tags = [flagsmith_tag.test_tag.id]
 }
 
-`, featureName, description, projectUUID(), strings.Join(strings.Fields(fmt.Sprint(owners)), ","))
+`, projectUUID(), featureName, description, projectUUID(), strings.Join(strings.Fields(fmt.Sprint(owners)), ","))
 }

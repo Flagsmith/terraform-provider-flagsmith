@@ -79,6 +79,7 @@ func (p *fsProvider) Resources(ctx context.Context) []func() resource.Resource {
 		newFeatureStateResource,
 		newSegmentResource,
 		newMultivariateResource,
+		newTagResource,
 	}
 
 }

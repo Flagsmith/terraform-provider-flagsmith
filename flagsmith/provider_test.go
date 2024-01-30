@@ -5,9 +5,12 @@ import (
 	"github.com/Flagsmith/terraform-provider-flagsmith/flagsmith"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 	"strconv"
 	"testing"
+	"fmt"
 )
 
 // Create provider factories - to be used by resource tests
@@ -67,4 +70,17 @@ func testClient() *flagsmithapi.Client {
 	}
 
 	return tc
+}
+func getAttributefromState(s *terraform.State, resourceName , attribute string) (string, error) {
+	rs, ok := s.RootModule().Resources[resourceName]
+	if !ok {
+		return "", fmt.Errorf("not found: %s", resourceName)
+	}
+
+	uuid := rs.Primary.Attributes[attribute]
+
+	if uuid == "" {
+		return "", fmt.Errorf("no uuid is set")
+	}
+	return uuid, nil
 }

@@ -222,6 +222,7 @@ type FeatureResourceData struct {
 	DefaultEnabled types.Bool     `tfsdk:"default_enabled"`
 	IsArchived     types.Bool     `tfsdk:"is_archived"`
 	Owners         *[]types.Int64 `tfsdk:"owners"`
+	Tags           *[]types.Int64 `tfsdk:"tags"`
 	ProjectID      types.Int64    `tfsdk:"project_id"`
 	ProjectUUID    types.String   `tfsdk:"project_uuid"`
 }
@@ -241,6 +242,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		DefaultEnabled: f.DefaultEnabled.ValueBool(),
 		IsArchived:     f.IsArchived.ValueBool(),
 		ProjectUUID:    f.ProjectUUID.ValueString(),
+		Tags:           []int64{},
 		Owners:         &[]int64{},
 	}
 	if !f.ID.IsNull() && !f.ID.IsUnknown() {
@@ -259,7 +261,12 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		for _, owner := range *f.Owners {
 			ownerID := owner.ValueInt64()
 			*feature.Owners = append(*feature.Owners, ownerID)
-
+		}
+	}
+	if f.Tags != nil {
+		for _, tag := range *f.Tags {
+			tagID := tag.ValueInt64()
+			feature.Tags = append(feature.Tags, tagID)
 		}
 	}
 	return &feature
@@ -290,6 +297,12 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 	if clientFeature.Owners != nil && len(*clientFeature.Owners) > 0 {
 		for _, owner := range *clientFeature.Owners {
 			*resourceData.Owners = append(*resourceData.Owners, types.Int64Value(owner))
+		}
+	}
+	if clientFeature.Tags != nil && len(clientFeature.Tags) > 0 {
+		resourceData.Tags = &[]types.Int64{}
+		for _, tag := range clientFeature.Tags {
+			*resourceData.Tags = append(*resourceData.Tags, types.Int64Value(tag))
 		}
 	}
 	return resourceData
@@ -437,5 +450,53 @@ func MakeSegmentResourceDataFromClientSegment(clientSegment *flagsmithapi.Segmen
 	for _, clientRule := range clientSegment.Rules {
 		resourceData.Rules = append(resourceData.Rules, MakeRuleFromClientRule(&clientRule))
 	}
+	return resourceData
+}
+
+type TagResourceData struct {
+	ID          types.Int64  `tfsdk:"id"`
+	UUID        types.String `tfsdk:"uuid"`
+	Name        types.String `tfsdk:"tag_name"`
+	Description types.String `tfsdk:"description"`
+	ProjectID   types.Int64  `tfsdk:"project_id"`
+	ProjectUUID types.String `tfsdk:"project_uuid"`
+	Colour      types.String `tfsdk:"tag_colour"`
+}
+
+func (t *TagResourceData) ToClientTag() *flagsmithapi.Tag {
+	tag := flagsmithapi.Tag{
+		UUID:        t.UUID.ValueString(),
+		Name:        t.Name.ValueString(),
+		ProjectUUID: t.ProjectUUID.ValueString(),
+		Colour:      t.Colour.ValueString(),
+	}
+	if t.Description.ValueString() != "" {
+		value := t.Description.ValueString()
+		tag.Description = &value
+	}
+	if !t.ID.IsNull() && !t.ID.IsUnknown() {
+		tagID := t.ID.ValueInt64()
+		tag.ID = &tagID
+	}
+	if !t.ProjectID.IsNull() && !t.ProjectID.IsUnknown() {
+		projectID := t.ProjectID.ValueInt64()
+		tag.ProjectID = &projectID
+	}
+	return &tag
+}
+
+func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceData {
+	resourceData := TagResourceData{
+		ID:          types.Int64Value(*clientTag.ID),
+		UUID:        types.StringValue(clientTag.UUID),
+		Name:        types.StringValue(clientTag.Name),
+		ProjectID:   types.Int64Value(*clientTag.ProjectID),
+		ProjectUUID: types.StringValue(clientTag.ProjectUUID),
+		Colour:      types.StringValue(clientTag.Colour),
+	}
+	if clientTag.Description != nil {
+		resourceData.Description = types.StringValue(*clientTag.Description)
+	}
+
 	return resourceData
 }

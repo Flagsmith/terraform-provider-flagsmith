@@ -43,6 +43,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 - `initial_value` (String) Determines the initial value of the feature.
 - `is_archived` (Boolean) Can be used to archive/unarchive a feature. If unspecified, it will default to false
 - `owners` (Set of Number) List of user IDs representing the owners of the feature.
+- `tags` (Set of Number) List of tag IDs representing the tags attached to the feature.
 - `type` (String) Type of the feature, can be STANDARD, or MULTIVARIATE. if unspecified, it will default to STANDARD
 
 ### Read-Only
