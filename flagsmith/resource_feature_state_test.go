@@ -27,7 +27,11 @@ func TestAccEnvironmentFeatureStateResource(t *testing.T) {
 				Config:      testAccEnvironmentFeatureStateResourceConfig(" some_value ", true),
 				ExpectError: regexp.MustCompile(`Attribute feature_state_value.string_value Leading and trailing whitespace is\n.*not allowed`),
 			},
-
+			// Ensure that empty strings pass validation
+			{
+				Config:      testAccEnvironmentFeatureStateResourceConfig("", true),
+				ExpectError: nil,
+			},
 			// Create and Read testing
 			{
 				Config: testAccEnvironmentFeatureStateResourceConfig("one", true),
