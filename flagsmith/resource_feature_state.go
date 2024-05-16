@@ -97,8 +97,9 @@ func (t *featureStateResource) Schema(ctx context.Context, req resource.SchemaRe
 						Optional:            true,
 						Validators: []validator.String{
 							// Validate string value satisfies the regular expression for no leading or trailing whitespace
+							// but allow empty string
 							stringvalidator.RegexMatches(
-								regexp.MustCompile(`^\S[\s\S]*\S$`),
+								regexp.MustCompile(`^\S[\s\S]*\S$|^$`),
 								"Leading and trailing whitespace is not allowed",
 							),
 						},
