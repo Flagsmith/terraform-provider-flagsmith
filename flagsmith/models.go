@@ -418,7 +418,7 @@ func (s *SegmentResourceData) ToClientSegment() *flagsmithapi.Segment {
 		segmentID := s.ID.ValueInt64()
 		segment.ID = &segmentID
 	}
-	if !s.ID.IsNull() && !s.FeatureID.IsUnknown() {
+	if !s.FeatureID.IsNull() && !s.FeatureID.IsUnknown() {
 		featureID := s.FeatureID.ValueInt64()
 		segment.FeatureID = &featureID
 	}

@@ -87,6 +87,36 @@ func TestAccSegmentResource(t *testing.T) {
 	})
 }
 
+func TestAccFeatureSpecificSegmentResource(t *testing.T) {
+	segmentName := acctest.RandString(16)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSegmentResourceDestroy,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testAccFeatureSegmentResourceConfig(segmentName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "name", segmentName),
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "project_uuid", projectUUID()),
+
+					resource.TestCheckResourceAttr("flagsmith_segment.test_segment", "feature_id", fmt.Sprintf("%d", featureID())),
+
+					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "id"),
+					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "uuid"),
+					resource.TestCheckResourceAttrSet("flagsmith_segment.test_segment", "project_id"),
+				),
+			},
+
+
+		},
+	})
+}
+
+
+
 func getSegmentImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		return getAttributefromState(s, n, "uuid")
@@ -136,4 +166,35 @@ resource "flagsmith_segment" "test_segment" {
 
 
 `, segmentName, description, projectUUID())
+}
+
+func testAccFeatureSegmentResourceConfig(segmentName string ) string {
+	return fmt.Sprintf(`
+provider "flagsmith" {
+
+}
+
+resource "flagsmith_segment" "test_segment" {
+  name         = "%s"
+  project_uuid = "%s"
+  description = "new segment description"
+feature_id = %d
+  rules = [
+    {
+      "rules" : [{
+        "conditions" : [{
+          "operator" : "EQUAL",
+          "property" : "device_type",
+          "value" : "mobile"
+        }],
+        "type" : "ANY"
+      }],
+      "type" : "ALL"
+
+    }
+  ]
+
+}
+
+`, segmentName, projectUUID(), featureID())
 }
