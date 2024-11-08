@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -75,8 +76,10 @@ func (t *tagResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				MarkdownDescription: "Name of the tag",
 			},
 			"tag_colour": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Hexadecimal value of the tag color",
+				Computed:            true,
+				Optional:            true,
+				Default:             stringdefault.StaticString("#6837FC"),
+				MarkdownDescription: "Colour for this tag, as accepted by [color-string](https://github.com/Qix-/color-string).",
 			},
 			"description": schema.StringAttribute{
 				Optional:            true,

@@ -18,12 +18,12 @@ Flagsmith Tag
 ### Required
 
 - `project_uuid` (String) UUID of project the tag belongs to
-- `tag_colour` (String) Hexadecimal value of the tag color
 - `tag_name` (String) Name of the tag
 
 ### Optional
 
 - `description` (String) Description of the feature
+- `tag_colour` (String) Colour for this tag, as accepted by [color-string](https://github.com/Qix-/color-string).
 
 ### Read-Only
 
