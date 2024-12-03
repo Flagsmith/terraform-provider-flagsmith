@@ -500,6 +500,68 @@ func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceDa
 
 	return resourceData
 }
+
+type ProjectResourceData struct {
+	ID 	types.Int64  `tfsdk:"id"`
+	UUID    types.String `tfsdk:"uuid"`
+	Name    types.String `tfsdk:"name"`
+	OrganisationID types.Int64 `tfsdk:"organisation_id"`
+	HideDisabledFlags types.Bool `tfsdk:"hide_disabled_flags"`
+	PreventFlagDefaults types.Bool `tfsdk:"prevent_flag_defaults"`
+	EnableRealtimeUpdates types.Bool `tfsdk:"enable_realtime_updates"`
+	OnlyAllowLowerCaseFeatureNames types.Bool `tfsdk:"only_allow_lower_case_feature_names"`
+	FeatureNameRegex types.String `tfsdk:"feature_name_regex"`
+	StaleFlagsLimitDays types.Int64 `tfsdk:"stale_flags_limit_days"`
+}
+
+
+func (p *ProjectResourceData) ToClientProject() *flagsmithapi.Project {
+	project := flagsmithapi.Project{
+		UUID:        p.UUID.ValueString(),
+		Name:        p.Name.ValueString(),
+		Organisation: p.OrganisationID.ValueInt64(),
+	}
+	if !p.ID.IsNull() && !p.ID.IsUnknown() {
+		project.ID = p.ID.ValueInt64()
+		//project.ID = &projectID
+	}
+
+	if p.HideDisabledFlags.ValueBool() {
+		project.HideDisabledFlags = p.HideDisabledFlags.ValueBool()
+	}
+	if p.PreventFlagDefaults.ValueBool() {
+		project.PreventFlagDefaults = p.PreventFlagDefaults.ValueBool()
+	}
+	if p.EnableRealtimeUpdates.ValueBool() {
+		project.EnableRealtimeUpdates = p.EnableRealtimeUpdates.ValueBool()
+	}
+	if p.OnlyAllowLowerCaseFeatureNames.ValueBool() {
+		project.OnlyAllowLowerCaseFeatureNames = p.OnlyAllowLowerCaseFeatureNames.ValueBool()
+	}
+	if p.FeatureNameRegex.ValueString() != "" {
+		project.FeatureNameRegex = p.FeatureNameRegex.ValueString()
+	}
+	if !p.StaleFlagsLimitDays.IsNull() && !p.StaleFlagsLimitDays.IsUnknown() {
+		project.StaleFlagsLimitDays = p.StaleFlagsLimitDays.ValueInt64()
+	}
+	return &project
+
+}
+func MakeProjectResourceDataFromClientProject(clientProject *flagsmithapi.Project) ProjectResourceData {
+	resourceData := ProjectResourceData{
+		ID:          types.Int64Value(clientProject.ID),
+		UUID:        types.StringValue(clientProject.UUID),
+		Name:        types.StringValue(clientProject.Name),
+		OrganisationID: types.Int64Value(clientProject.Organisation),
+		HideDisabledFlags: types.BoolValue(clientProject.HideDisabledFlags),
+		PreventFlagDefaults: types.BoolValue(clientProject.PreventFlagDefaults),
+		EnableRealtimeUpdates: types.BoolValue(clientProject.EnableRealtimeUpdates),
+		OnlyAllowLowerCaseFeatureNames: types.BoolValue(clientProject.OnlyAllowLowerCaseFeatureNames),
+		FeatureNameRegex: types.StringValue(clientProject.FeatureNameRegex),
+		StaleFlagsLimitDays: types.Int64Value(clientProject.StaleFlagsLimitDays),
+	}
+	return resourceData
+}
 type OrganisationResourceData struct {
 	ID types.Int64 `tfsdk:"id"`
 	UUID types.String `tfsdk:"uuid"`
