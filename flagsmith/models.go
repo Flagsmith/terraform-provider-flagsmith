@@ -500,3 +500,22 @@ func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceDa
 
 	return resourceData
 }
+type OrganisationResourceData struct {
+	ID types.Int64 `tfsdk:"id"`
+	UUID types.String `tfsdk:"uuid"`
+	Name types.String `tfsdk:"name"`
+	Force2FA types.Bool `tfsdk:"force_2fa"`
+	PersistTraitData types.Bool `tfsdk:"persist_trait_data"`
+	RestrictProjectCreateToAdmin types.Bool `tfsdk:"restrict_project_create_to_admin"`
+}
+func MakeOrganisationResourceDataFromClientOrganisation(clientOrganisation *flagsmithapi.Organisation) OrganisationResourceData {
+	resourceData := OrganisationResourceData{
+		ID:          types.Int64Value(clientOrganisation.ID),
+		UUID:       types.StringValue(clientOrganisation.UUID),
+		Name:        types.StringValue(clientOrganisation.Name),
+		Force2FA: types.BoolValue(clientOrganisation.Force2FA),
+		PersistTraitData: types.BoolValue(clientOrganisation.PersistTraitData),
+		RestrictProjectCreateToAdmin: types.BoolValue(clientOrganisation.RestrictProjectCreateToAdmin),
+	}
+	return resourceData
+}

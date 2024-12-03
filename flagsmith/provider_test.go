@@ -24,6 +24,9 @@ func testAccPreCheck(t *testing.T) {
 	mustHaveEnv(t, "FLAGSMITH_ENVIRONMENT_ID")
 	mustHaveEnv(t, "FLAGSMITH_FEATURE_ID")
 	mustHaveEnv(t, "FLAGSMITH_PROJECT_UUID")
+	mustHaveEnv(t, "FLAGSMITH_PROJECT_ID")
+	mustHaveEnv(t, "FLAGSMITH_ORGANISATION_ID")
+	mustHaveEnv(t, "FLAGSMITH_ORGANISATION_UUID")
 }
 
 func mustHaveEnv(t *testing.T, name string) {
@@ -49,12 +52,31 @@ func environmentID() int {
 	}
 	return v
 }
+func projectID() int {
+	v, err := strconv.Atoi(os.Getenv("FLAGSMITH_PROJECT_ID"))
+	if err != nil {
+		panic(err)
+
+	}
+	return v
+}
+
 func featureID() int {
 	v, err := strconv.Atoi(os.Getenv("FLAGSMITH_FEATURE_ID"))
 	if err != nil {
 		panic(err)
 	}
 	return v
+}
+func organisationID() int {
+	v, err := strconv.Atoi(os.Getenv("FLAGSMITH_ORGANISATION_ID"))
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+func organisationUUID() string{
+	return os.Getenv("FLAGSMITH_ORGANISATION_UUID")
 }
 
 var tc *flagsmithapi.Client
