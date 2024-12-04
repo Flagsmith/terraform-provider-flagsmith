@@ -1,3 +1,23 @@
+## 0.9.0
+FEATURES:
+* Add resource `flagsmith_project`
+* Add resource `flagsmith_environment`
+* Add data resource `flagsmith_organisation`
+
+
+## 0.8.2
+ENHANCEMENTS:
+* resource(flagsmith_tag): Make `tag_colour` optional
+
+## 0.8.1
+BUG FIXES
+fix https://github.com/Flagsmith/terraform-provider-flagsmith/issues/155
+
+
+## 0.8.0
+NOTES:
+* This Go module(and related dependencies) has been updated to GO 1.21 as per the Go Support policy
+
 ## 0.7.0
 FEATURES:
 * Add resource `flagsmith_tag`
