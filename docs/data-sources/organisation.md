@@ -3,12 +3,12 @@
 page_title: "flagsmith_organisation Data Source - terraform-provider-flagsmith"
 subcategory: ""
 description: |-
-  Flagsmith Organisation/ Remote config
+  Flagsmith Organisation
 ---
 
 # flagsmith_organisation (Data Source)
 
-Flagsmith Organisation/ Remote config
+Flagsmith Organisation
 
 
 

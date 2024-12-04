@@ -43,7 +43,7 @@ func (o *organisationDataResource) Configure(ctx context.Context, req datasource
 func (o *organisationDataResource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith Organisation/ Remote config",
+		MarkdownDescription: "Flagsmith Organisation",
 
 		Attributes: map[string]schema.Attribute{
 			"uuid": schema.StringAttribute{

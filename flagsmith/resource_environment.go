@@ -53,7 +53,7 @@ func (r *environmentResource) Configure(ctx context.Context, req resource.Config
 func (t *environmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Flagsmith Environment/ Remote config",
+		MarkdownDescription: "Flagsmith Environment",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

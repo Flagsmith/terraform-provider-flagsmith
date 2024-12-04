@@ -3,12 +3,12 @@
 page_title: "flagsmith_project Resource - terraform-provider-flagsmith"
 subcategory: ""
 description: |-
-  Flagsmith Project/ Remote config
+  Flagsmith Project
 ---
 
 # flagsmith_project (Resource)
 
-Flagsmith Project/ Remote config
+Flagsmith Project
 
 
 

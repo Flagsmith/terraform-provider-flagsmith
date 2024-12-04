@@ -3,12 +3,12 @@
 page_title: "flagsmith_environment Resource - terraform-provider-flagsmith"
 subcategory: ""
 description: |-
-  Flagsmith Environment/ Remote config
+  Flagsmith Environment
 ---
 
 # flagsmith_environment (Resource)
 
-Flagsmith Environment/ Remote config
+Flagsmith Environment
 
 
 
