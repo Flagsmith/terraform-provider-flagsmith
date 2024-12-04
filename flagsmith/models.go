@@ -523,7 +523,6 @@ func (p *ProjectResourceData) ToClientProject() *flagsmithapi.Project {
 	}
 	if !p.ID.IsNull() && !p.ID.IsUnknown() {
 		project.ID = p.ID.ValueInt64()
-		//project.ID = &projectID
 	}
 
 	if p.HideDisabledFlags.ValueBool() {
@@ -578,6 +577,70 @@ func MakeOrganisationResourceDataFromClientOrganisation(clientOrganisation *flag
 		Force2FA: types.BoolValue(clientOrganisation.Force2FA),
 		PersistTraitData: types.BoolValue(clientOrganisation.PersistTraitData),
 		RestrictProjectCreateToAdmin: types.BoolValue(clientOrganisation.RestrictProjectCreateToAdmin),
+	}
+	return resourceData
+}
+
+type EnvironmentResourceData struct {
+	ID          types.Int64  `tfsdk:"id"`
+	UUID        types.String `tfsdk:"uuid"`
+	Name        types.String `tfsdk:"name"`
+	APIKey      types.String `tfsdk:"api_key"`
+	ProjectID   types.Int64  `tfsdk:"project_id"`
+	Description types.String `tfsdk:"description"`
+	AllowClientTraits types.Bool `tfsdk:"allow_client_traits"`
+	BannerText types.String `tfsdk:"banner_text"`
+	BannerColour types.String `tfsdk:"banner_colour"`
+	HideDisabledFlags types.Bool `tfsdk:"hide_disabled_flags"`
+	HideSensitiveData types.Bool `tfsdk:"hide_sensitive_data"`
+	UseIdentityCompositeKeyForHashing types.Bool `tfsdk:"use_identity_composite_key_for_hashing"`
+	MinimumChangeRequestApprovals types.Int64 `tfsdk:"minimum_change_request_approvals"`
+
+}
+
+func (e *EnvironmentResourceData) ToClientEnvironment() *flagsmithapi.Environment {
+	environment := flagsmithapi.Environment{
+		UUID:        e.UUID.ValueString(),
+		Name:        e.Name.ValueString(),
+		APIKey:      e.APIKey.ValueString(),
+		ProjectID:   e.ProjectID.ValueInt64(),
+		Description: e.Description.ValueString(),
+		AllowClientTraits: e.AllowClientTraits.ValueBool(),
+		BannerText: e.BannerText.ValueString(),
+		BannerColour: e.BannerColour.ValueString(),
+		HideDisabledFlags: e.HideDisabledFlags.ValueBool(),
+		HideSensitiveData: e.HideSensitiveData.ValueBool(),
+		UseIdentityCompositeKeyForHashing: e.UseIdentityCompositeKeyForHashing.ValueBool(),
+		MinimumChangeRequestApprovals: e.MinimumChangeRequestApprovals.ValueInt64(),
+	}
+	if !e.ID.IsNull() && !e.ID.IsUnknown() {
+		environment.ID = e.ID.ValueInt64()
+	}
+	return &environment
+}
+
+func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmithapi.Environment) EnvironmentResourceData {
+	resourceData := EnvironmentResourceData{
+		ID:          types.Int64Value(clientEnvironment.ID),
+		UUID:        types.StringValue(clientEnvironment.UUID),
+		Name:        types.StringValue(clientEnvironment.Name),
+		APIKey:      types.StringValue(clientEnvironment.APIKey),
+		ProjectID:   types.Int64Value(clientEnvironment.ProjectID),
+		MinimumChangeRequestApprovals: types.Int64Value(clientEnvironment.MinimumChangeRequestApprovals),
+		AllowClientTraits: types.BoolValue(clientEnvironment.AllowClientTraits),
+		HideDisabledFlags: types.BoolValue(clientEnvironment.HideDisabledFlags),
+		HideSensitiveData: types.BoolValue(clientEnvironment.HideSensitiveData),
+		UseIdentityCompositeKeyForHashing: types.BoolValue(clientEnvironment.UseIdentityCompositeKeyForHashing),
+	}
+	if clientEnvironment.Description != "" {
+		resourceData.Description = types.StringValue(clientEnvironment.Description)
+	}
+
+	if clientEnvironment.BannerText != "" {
+		resourceData.BannerText = types.StringValue(clientEnvironment.BannerText)
+	}
+	if clientEnvironment.BannerColour != "" {
+		resourceData.BannerColour = types.StringValue(clientEnvironment.BannerColour)
 	}
 	return resourceData
 }
