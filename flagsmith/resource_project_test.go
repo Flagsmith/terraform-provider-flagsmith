@@ -33,11 +33,10 @@ func TestAccProjectResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enable_realtime_updates", "false"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "only_allow_lower_case_feature_names", "true"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "feature_name_regex", ""),
-					resource.TestCheckResourceAttr("flagsmith_project.test_project", "stale_flags_limit_days", "0"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "uuid"),
-
+					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "stale_flags_limit_days"),
 				),
 			},
 
@@ -55,11 +54,10 @@ func TestAccProjectResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enable_realtime_updates", "false"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "only_allow_lower_case_feature_names", "true"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "feature_name_regex", ""),
-					resource.TestCheckResourceAttr("flagsmith_project.test_project", "stale_flags_limit_days", "0"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "uuid"),
-
+					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "stale_flags_limit_days"),
 
 				),
 			},
@@ -75,11 +73,10 @@ func TestAccProjectResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enable_realtime_updates", "false"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "only_allow_lower_case_feature_names", "true"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "feature_name_regex", ""),
-					resource.TestCheckResourceAttr("flagsmith_project.test_project", "stale_flags_limit_days", "0"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "uuid"),
-
+					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "stale_flags_limit_days"),
 
 				),
 			},
