@@ -87,7 +87,6 @@ func (p *fsProvider) Resources(ctx context.Context) []func() resource.Resource {
 }
 
 func (p *fsProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	// Does not define any data source
 	return []func() datasource.DataSource{
 		newOrganisationDataResource,
 	}
