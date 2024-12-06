@@ -500,3 +500,147 @@ func MakeTagResourceDataFromClientTag(clientTag *flagsmithapi.Tag) TagResourceDa
 
 	return resourceData
 }
+
+type ProjectResourceData struct {
+	ID 	types.Int64  `tfsdk:"id"`
+	UUID    types.String `tfsdk:"uuid"`
+	Name    types.String `tfsdk:"name"`
+	OrganisationID types.Int64 `tfsdk:"organisation_id"`
+	HideDisabledFlags types.Bool `tfsdk:"hide_disabled_flags"`
+	PreventFlagDefaults types.Bool `tfsdk:"prevent_flag_defaults"`
+	EnableRealtimeUpdates types.Bool `tfsdk:"enable_realtime_updates"`
+	OnlyAllowLowerCaseFeatureNames types.Bool `tfsdk:"only_allow_lower_case_feature_names"`
+	FeatureNameRegex types.String `tfsdk:"feature_name_regex"`
+	StaleFlagsLimitDays types.Int64 `tfsdk:"stale_flags_limit_days"`
+}
+
+
+func (p *ProjectResourceData) ToClientProject() *flagsmithapi.Project {
+	project := flagsmithapi.Project{
+		UUID:        p.UUID.ValueString(),
+		Name:        p.Name.ValueString(),
+		Organisation: p.OrganisationID.ValueInt64(),
+	}
+	if !p.ID.IsNull() && !p.ID.IsUnknown() {
+		project.ID = p.ID.ValueInt64()
+	}
+
+	if p.HideDisabledFlags.ValueBool() {
+		project.HideDisabledFlags = p.HideDisabledFlags.ValueBool()
+	}
+	if p.PreventFlagDefaults.ValueBool() {
+		project.PreventFlagDefaults = p.PreventFlagDefaults.ValueBool()
+	}
+	if p.EnableRealtimeUpdates.ValueBool() {
+		project.EnableRealtimeUpdates = p.EnableRealtimeUpdates.ValueBool()
+	}
+	if p.OnlyAllowLowerCaseFeatureNames.ValueBool() {
+		project.OnlyAllowLowerCaseFeatureNames = p.OnlyAllowLowerCaseFeatureNames.ValueBool()
+	}
+	if p.FeatureNameRegex.ValueString() != "" {
+		project.FeatureNameRegex = p.FeatureNameRegex.ValueString()
+	}
+	if !p.StaleFlagsLimitDays.IsNull() && !p.StaleFlagsLimitDays.IsUnknown() {
+		project.StaleFlagsLimitDays = p.StaleFlagsLimitDays.ValueInt64()
+	}
+	return &project
+
+}
+func MakeProjectResourceDataFromClientProject(clientProject *flagsmithapi.Project) ProjectResourceData {
+	resourceData := ProjectResourceData{
+		ID:          types.Int64Value(clientProject.ID),
+		UUID:        types.StringValue(clientProject.UUID),
+		Name:        types.StringValue(clientProject.Name),
+		OrganisationID: types.Int64Value(clientProject.Organisation),
+		HideDisabledFlags: types.BoolValue(clientProject.HideDisabledFlags),
+		PreventFlagDefaults: types.BoolValue(clientProject.PreventFlagDefaults),
+		EnableRealtimeUpdates: types.BoolValue(clientProject.EnableRealtimeUpdates),
+		OnlyAllowLowerCaseFeatureNames: types.BoolValue(clientProject.OnlyAllowLowerCaseFeatureNames),
+		FeatureNameRegex: types.StringValue(clientProject.FeatureNameRegex),
+		StaleFlagsLimitDays: types.Int64Value(clientProject.StaleFlagsLimitDays),
+	}
+	return resourceData
+}
+type OrganisationResourceData struct {
+	ID types.Int64 `tfsdk:"id"`
+	UUID types.String `tfsdk:"uuid"`
+	Name types.String `tfsdk:"name"`
+	Force2FA types.Bool `tfsdk:"force_2fa"`
+	PersistTraitData types.Bool `tfsdk:"persist_trait_data"`
+	RestrictProjectCreateToAdmin types.Bool `tfsdk:"restrict_project_create_to_admin"`
+}
+func MakeOrganisationResourceDataFromClientOrganisation(clientOrganisation *flagsmithapi.Organisation) OrganisationResourceData {
+	resourceData := OrganisationResourceData{
+		ID:          types.Int64Value(clientOrganisation.ID),
+		UUID:       types.StringValue(clientOrganisation.UUID),
+		Name:        types.StringValue(clientOrganisation.Name),
+		Force2FA: types.BoolValue(clientOrganisation.Force2FA),
+		PersistTraitData: types.BoolValue(clientOrganisation.PersistTraitData),
+		RestrictProjectCreateToAdmin: types.BoolValue(clientOrganisation.RestrictProjectCreateToAdmin),
+	}
+	return resourceData
+}
+
+type EnvironmentResourceData struct {
+	ID          types.Int64  `tfsdk:"id"`
+	UUID        types.String `tfsdk:"uuid"`
+	Name        types.String `tfsdk:"name"`
+	APIKey      types.String `tfsdk:"api_key"`
+	ProjectID   types.Int64  `tfsdk:"project_id"`
+	Description types.String `tfsdk:"description"`
+	AllowClientTraits types.Bool `tfsdk:"allow_client_traits"`
+	BannerText types.String `tfsdk:"banner_text"`
+	BannerColour types.String `tfsdk:"banner_colour"`
+	HideDisabledFlags types.Bool `tfsdk:"hide_disabled_flags"`
+	HideSensitiveData types.Bool `tfsdk:"hide_sensitive_data"`
+	UseIdentityCompositeKeyForHashing types.Bool `tfsdk:"use_identity_composite_key_for_hashing"`
+	MinimumChangeRequestApprovals types.Int64 `tfsdk:"minimum_change_request_approvals"`
+
+}
+
+func (e *EnvironmentResourceData) ToClientEnvironment() *flagsmithapi.Environment {
+	environment := flagsmithapi.Environment{
+		UUID:        e.UUID.ValueString(),
+		Name:        e.Name.ValueString(),
+		APIKey:      e.APIKey.ValueString(),
+		ProjectID:   e.ProjectID.ValueInt64(),
+		Description: e.Description.ValueString(),
+		AllowClientTraits: e.AllowClientTraits.ValueBool(),
+		BannerText: e.BannerText.ValueString(),
+		BannerColour: e.BannerColour.ValueString(),
+		HideDisabledFlags: e.HideDisabledFlags.ValueBool(),
+		HideSensitiveData: e.HideSensitiveData.ValueBool(),
+		UseIdentityCompositeKeyForHashing: e.UseIdentityCompositeKeyForHashing.ValueBool(),
+		MinimumChangeRequestApprovals: e.MinimumChangeRequestApprovals.ValueInt64(),
+	}
+	if !e.ID.IsNull() && !e.ID.IsUnknown() {
+		environment.ID = e.ID.ValueInt64()
+	}
+	return &environment
+}
+
+func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmithapi.Environment) EnvironmentResourceData {
+	resourceData := EnvironmentResourceData{
+		ID:          types.Int64Value(clientEnvironment.ID),
+		UUID:        types.StringValue(clientEnvironment.UUID),
+		Name:        types.StringValue(clientEnvironment.Name),
+		APIKey:      types.StringValue(clientEnvironment.APIKey),
+		ProjectID:   types.Int64Value(clientEnvironment.ProjectID),
+		MinimumChangeRequestApprovals: types.Int64Value(clientEnvironment.MinimumChangeRequestApprovals),
+		AllowClientTraits: types.BoolValue(clientEnvironment.AllowClientTraits),
+		HideDisabledFlags: types.BoolValue(clientEnvironment.HideDisabledFlags),
+		HideSensitiveData: types.BoolValue(clientEnvironment.HideSensitiveData),
+		UseIdentityCompositeKeyForHashing: types.BoolValue(clientEnvironment.UseIdentityCompositeKeyForHashing),
+	}
+	if clientEnvironment.Description != "" {
+		resourceData.Description = types.StringValue(clientEnvironment.Description)
+	}
+
+	if clientEnvironment.BannerText != "" {
+		resourceData.BannerText = types.StringValue(clientEnvironment.BannerText)
+	}
+	if clientEnvironment.BannerColour != "" {
+		resourceData.BannerColour = types.StringValue(clientEnvironment.BannerColour)
+	}
+	return resourceData
+}

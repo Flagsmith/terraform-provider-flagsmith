@@ -80,13 +80,16 @@ func (p *fsProvider) Resources(ctx context.Context) []func() resource.Resource {
 		newSegmentResource,
 		newMultivariateResource,
 		newTagResource,
+		newProjectResource,
+		newEnvironmentResource,
 	}
 
 }
 
 func (p *fsProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	// Does not define any data source
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		newOrganisationDataResource,
+	}
 }
 
 func (p *fsProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

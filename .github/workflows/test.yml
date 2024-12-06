@@ -82,6 +82,9 @@ jobs:
           FLAGSMITH_ENVIRONMENT_ID: 18143
           FLAGSMITH_FEATURE_ID: 25142
           FLAGSMITH_PROJECT_UUID: 97907de4-66d4-4d78-aae3-04f5a4518a55
+          FLAGSMITH_PROJECT_ID: 7721
+          FLAGSMITH_ORGANISATION_UUID: 0ee0578e-f2b8-467d-ba49-4cda324cea91
+          FLAGSMITH_ORGANISATION_ID: 6880
           TF_ACC: "1"
         run: go test -v -cover ./flagsmith/
         timeout-minutes: 10
