@@ -5,7 +5,7 @@ go 1.22.7
 toolchain go1.23.3
 
 require (
-	github.com/Flagsmith/flagsmith-go-api-client v0.10.0
+	github.com/Flagsmith/flagsmith-go-api-client v0.10.1
 	github.com/hashicorp/terraform-plugin-docs v0.20.1
 	github.com/hashicorp/terraform-plugin-framework v1.13.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.16.0
