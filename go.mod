@@ -1,6 +1,6 @@
 module github.com/Flagsmith/terraform-provider-flagsmith
 
-go 1.22.7
+go 1.23.0
 
 toolchain go1.23.3
 
@@ -8,12 +8,11 @@ require (
 	github.com/Flagsmith/flagsmith-go-api-client v0.10.1
 	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
-	github.com/hashicorp/terraform-plugin-framework-validators v0.17.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0
 	github.com/hashicorp/terraform-plugin-go v0.26.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
 	github.com/stretchr/testify v1.10.0
-
 )
 
 require (
@@ -33,7 +32,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/cli v1.1.7 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
