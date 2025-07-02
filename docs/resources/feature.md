@@ -56,6 +56,8 @@ resource "flagsmith_feature" "new_standard_feature" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import flagsmith_feature.some_feature <feature_uuid>
 ```

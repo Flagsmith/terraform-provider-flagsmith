@@ -102,6 +102,8 @@ Optional:
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import flagsmith_feature_state.some_flag <enviroment_client_key>,<feature_state_uuid>
 ```
