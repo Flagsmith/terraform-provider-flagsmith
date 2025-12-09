@@ -56,6 +56,17 @@ resource "flagsmith_feature" "new_standard_feature" {
 
 Import is supported using the following syntax:
 
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = flagsmith_feature.some_feature
+  id = "<feature_uuid>"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import flagsmith_feature.some_feature <feature_uuid>
 ```
