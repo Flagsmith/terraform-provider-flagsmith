@@ -32,6 +32,7 @@ func TestAccProjectResource(t *testing.T) {
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enable_realtime_updates", "false"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "only_allow_lower_case_feature_names", "true"),
 					resource.TestCheckResourceAttr("flagsmith_project.test_project", "feature_name_regex", ""),
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "false"),
 
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "id"),
 					resource.TestCheckResourceAttrSet("flagsmith_project.test_project", "uuid"),
@@ -83,6 +84,52 @@ func TestAccProjectResource(t *testing.T) {
 	})
 }
 
+
+func TestAccProjectResourceEnforceFeatureOwners(t *testing.T) {
+	projectName := acctest.RandString(16)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create with enforce_feature_owners = true
+			{
+				Config: testAccProjectResourceWithEnforceOwnersConfig(projectName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "name", projectName),
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "true"),
+				),
+			},
+
+			// ImportState testing
+			{
+				ResourceName:      "flagsmith_project.test_project",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: getProjectImportID("flagsmith_project.test_project"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccProjectResourceWithEnforceOwnersConfig(projectName string, enforceOwners bool) string {
+	return fmt.Sprintf(`
+%s
+
+data "flagsmith_organisation" "test_org" {
+  uuid = "%s"
+}
+
+resource "flagsmith_project" "test_project" {
+  name                   = "%s"
+  organisation_id        = data.flagsmith_organisation.test_org.id
+  enforce_feature_owners = %t
+}
+`, providerConfig(), organisationUUID(), projectName, enforceOwners)
+}
 
 func getProjectImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {

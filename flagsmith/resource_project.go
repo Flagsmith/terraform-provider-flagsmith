@@ -114,6 +114,13 @@ func (t *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 				MarkdownDescription: "Number of days without modification in any environment before a flag is considered stale.",
 				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
+			"enforce_feature_owners": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "If true, feature creation requires at least one owner or group owner.",
+				Default:             booldefault.StaticBool(false),
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+			},
 		},
 	}
 }

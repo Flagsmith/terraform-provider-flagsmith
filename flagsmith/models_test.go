@@ -157,6 +157,129 @@ func TestMakeFeatureStateResourceDataFromClientFS(t *testing.T) {
 
 }
 
+func TestFeatureResourceDataWithGroupOwnersToClientFeature(t *testing.T) {
+	// Given
+	featureID := int64(1)
+	projectID := int64(10)
+	groupOwners := []types.Int64{types.Int64Value(3), types.Int64Value(4)}
+	featureResourceData := FeatureResourceData{
+		ID:          types.Int64Value(featureID),
+		Name:        types.StringValue("test_feature"),
+		ProjectID:   types.Int64Value(projectID),
+		ProjectUUID: types.StringValue("project-uuid"),
+		GroupOwners: &groupOwners,
+	}
+
+	// When
+	clientFeature := featureResourceData.ToClientFeature()
+
+	// Then
+	assert.NotNil(t, clientFeature.GroupOwners)
+	assert.Equal(t, []int64{3, 4}, *clientFeature.GroupOwners)
+}
+
+func TestMakeFeatureResourceDataFromClientFeatureWithGroupOwners(t *testing.T) {
+	// Given
+	featureID := int64(1)
+	projectID := int64(10)
+	featureType := "STANDARD"
+	groupOwners := []int64{3, 4}
+	clientFeature := flagsmithapi.Feature{
+		Name:        "test_feature",
+		ID:          &featureID,
+		ProjectID:   &projectID,
+		Type:        &featureType,
+		GroupOwners: &groupOwners,
+		Tags:        []int64{},
+	}
+
+	// When
+	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature)
+
+	// Then
+	assert.NotNil(t, resourceData.GroupOwners)
+	assert.Len(t, *resourceData.GroupOwners, 2)
+	assert.Equal(t, int64(3), (*resourceData.GroupOwners)[0].ValueInt64())
+	assert.Equal(t, int64(4), (*resourceData.GroupOwners)[1].ValueInt64())
+}
+
+func TestMakeFeatureResourceDataFromClientFeatureNilGroupOwners(t *testing.T) {
+	// Given
+	featureID := int64(1)
+	projectID := int64(10)
+	featureType := "STANDARD"
+	clientFeature := flagsmithapi.Feature{
+		Name:        "test_feature",
+		ID:          &featureID,
+		ProjectID:   &projectID,
+		Type:        &featureType,
+		GroupOwners: nil,
+		Tags:        []int64{},
+	}
+
+	// When
+	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature)
+
+	// Then
+	assert.Nil(t, resourceData.GroupOwners)
+}
+
+func TestMakeUserResourceDataFromClientUser(t *testing.T) {
+	// Given
+	clientUser := flagsmithapi.User{
+		ID:        100,
+		Email:     "john@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
+		Role:      "ADMIN",
+	}
+
+	// When
+	userData := MakeUserResourceDataFromClientUser(&clientUser, 1)
+
+	// Then
+	assert.Equal(t, int64(100), userData.ID.ValueInt64())
+	assert.Equal(t, int64(1), userData.OrganisationID.ValueInt64())
+	assert.Equal(t, "john@example.com", userData.Email.ValueString())
+	assert.Equal(t, "John", userData.FirstName.ValueString())
+	assert.Equal(t, "Doe", userData.LastName.ValueString())
+	assert.Equal(t, "ADMIN", userData.Role.ValueString())
+}
+
+func TestProjectResourceDataWithEnforceFeatureOwners(t *testing.T) {
+	// Given
+	projectResourceData := ProjectResourceData{
+		ID:                   types.Int64Value(10),
+		UUID:                 types.StringValue("uuid"),
+		Name:                 types.StringValue("test"),
+		OrganisationID:       types.Int64Value(1),
+		EnforceFeatureOwners: types.BoolValue(true),
+	}
+
+	// When
+	clientProject := projectResourceData.ToClientProject()
+
+	// Then
+	assert.True(t, clientProject.EnforceFeatureOwners)
+}
+
+func TestMakeProjectResourceDataFromClientProjectWithEnforceFeatureOwners(t *testing.T) {
+	// Given
+	clientProject := flagsmithapi.Project{
+		ID:                   10,
+		UUID:                 "uuid",
+		Name:                 "test",
+		Organisation:         1,
+		EnforceFeatureOwners: true,
+	}
+
+	// When
+	resourceData := MakeProjectResourceDataFromClientProject(&clientProject)
+
+	// Then
+	assert.True(t, resourceData.EnforceFeatureOwners.ValueBool())
+}
+
 func TestFeatureStateResourceDataToClientFS(t *testing.T) {
 	//Given
 	featureStateID := int64(1)
