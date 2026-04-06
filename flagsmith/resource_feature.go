@@ -283,6 +283,12 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read feature after update, got error: %s", err))
 		return
 	}
+	if plan.Owners == nil && feature.Owners != nil && len(*feature.Owners) == 0 {
+		feature.Owners = nil
+	}
+	if plan.GroupOwners == nil && feature.GroupOwners != nil && len(*feature.GroupOwners) == 0 {
+		feature.GroupOwners = nil
+	}
 	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
 
 	// Update the state with the new values
