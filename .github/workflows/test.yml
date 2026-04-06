@@ -24,10 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - uses: actions/checkout@v6
       - run: go mod download
       - run: go build -v .
 
@@ -35,10 +35,10 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - uses: actions/checkout@v6
       - run: go generate ./...
       - name: git diff
         run: |
@@ -60,6 +60,7 @@ jobs:
           - '1.8.*'
           - '1.9.*'
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
@@ -67,7 +68,6 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - uses: actions/checkout@v6
       - run: go mod download
       - env:
           FLAGSMITH_MASTER_API_KEY: ${{ secrets.FLAGSMITH_MASTER_API_KEY }}
