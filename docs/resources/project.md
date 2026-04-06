@@ -23,6 +23,7 @@ Flagsmith Project
 ### Optional
 
 - `enable_realtime_updates` (Boolean) Enable this to trigger a realtime(sse) event whenever the value of a flag changes
+- `enforce_feature_owners` (Boolean) If true, feature creation requires at least one owner or group owner.
 - `feature_name_regex` (String) Used for validating feature names
 - `hide_disabled_flags` (Boolean) If true will exclude flags from SDK which are disabled
 - `only_allow_lower_case_feature_names` (Boolean) Used by UI to validate feature names

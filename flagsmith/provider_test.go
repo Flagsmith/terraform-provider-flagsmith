@@ -93,6 +93,31 @@ func testClient() *flagsmithapi.Client {
 
 	return tc
 }
+func userEmail() string {
+	return os.Getenv("FLAGSMITH_USER_EMAIL")
+}
+
+func groupID() int {
+	v, err := strconv.Atoi(os.Getenv("FLAGSMITH_GROUP_ID"))
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+func providerConfig() string {
+	baseAPIURL := os.Getenv("FLAGSMITH_BASE_API_URL")
+	if baseAPIURL != "" {
+		return fmt.Sprintf(`
+provider "flagsmith" {
+  base_api_url = "%s"
+}
+`, baseAPIURL)
+	}
+	return `
+provider "flagsmith" {}
+`
+}
+
 func getAttributefromState(s *terraform.State, resourceName , attribute string) (string, error) {
 	rs, ok := s.RootModule().Resources[resourceName]
 	if !ok {

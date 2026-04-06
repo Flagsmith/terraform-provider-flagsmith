@@ -222,6 +222,7 @@ type FeatureResourceData struct {
 	DefaultEnabled types.Bool     `tfsdk:"default_enabled"`
 	IsArchived     types.Bool     `tfsdk:"is_archived"`
 	Owners         *[]types.Int64 `tfsdk:"owners"`
+	GroupOwners    *[]types.Int64 `tfsdk:"group_owners"`
 	Tags           *[]types.Int64 `tfsdk:"tags"`
 	ProjectID      types.Int64    `tfsdk:"project_id"`
 	ProjectUUID    types.String   `tfsdk:"project_uuid"`
@@ -244,6 +245,7 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		ProjectUUID:    f.ProjectUUID.ValueString(),
 		Tags:           []int64{},
 		Owners:         &[]int64{},
+		GroupOwners:    &[]int64{},
 	}
 	if !f.ID.IsNull() && !f.ID.IsUnknown() {
 		featureID := f.ID.ValueInt64()
@@ -261,6 +263,16 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 		for _, owner := range *f.Owners {
 			ownerID := owner.ValueInt64()
 			*feature.Owners = append(*feature.Owners, ownerID)
+		}
+	}
+	if f.GroupOwners == nil {
+		feature.GroupOwners = nil
+	}
+
+	if f.GroupOwners != nil && len(*f.GroupOwners) > 0 {
+		for _, groupOwner := range *f.GroupOwners {
+			groupOwnerID := groupOwner.ValueInt64()
+			*feature.GroupOwners = append(*feature.GroupOwners, groupOwnerID)
 		}
 	}
 	if f.Tags != nil {
@@ -285,6 +297,7 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		ProjectID:      types.Int64Value(*clientFeature.ProjectID),
 		ProjectUUID:    types.StringValue(clientFeature.ProjectUUID),
 		Owners:         &[]types.Int64{},
+		GroupOwners:    &[]types.Int64{},
 	}
 	if clientFeature.Description != nil {
 		resourceData.Description = types.StringValue(*clientFeature.Description)
@@ -297,6 +310,15 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 	if clientFeature.Owners != nil && len(*clientFeature.Owners) > 0 {
 		for _, owner := range *clientFeature.Owners {
 			*resourceData.Owners = append(*resourceData.Owners, types.Int64Value(owner))
+		}
+	}
+	if clientFeature.GroupOwners == nil {
+		resourceData.GroupOwners = nil
+	}
+
+	if clientFeature.GroupOwners != nil && len(*clientFeature.GroupOwners) > 0 {
+		for _, groupOwner := range *clientFeature.GroupOwners {
+			*resourceData.GroupOwners = append(*resourceData.GroupOwners, types.Int64Value(groupOwner))
 		}
 	}
 	if clientFeature.Tags != nil && len(clientFeature.Tags) > 0 {
@@ -512,6 +534,7 @@ type ProjectResourceData struct {
 	OnlyAllowLowerCaseFeatureNames types.Bool `tfsdk:"only_allow_lower_case_feature_names"`
 	FeatureNameRegex types.String `tfsdk:"feature_name_regex"`
 	StaleFlagsLimitDays types.Int64 `tfsdk:"stale_flags_limit_days"`
+	EnforceFeatureOwners types.Bool `tfsdk:"enforce_feature_owners"`
 }
 
 
@@ -543,6 +566,10 @@ func (p *ProjectResourceData) ToClientProject() *flagsmithapi.Project {
 	if !p.StaleFlagsLimitDays.IsNull() && !p.StaleFlagsLimitDays.IsUnknown() {
 		project.StaleFlagsLimitDays = p.StaleFlagsLimitDays.ValueInt64()
 	}
+	if !p.EnforceFeatureOwners.IsNull() && !p.EnforceFeatureOwners.IsUnknown() {
+		v := p.EnforceFeatureOwners.ValueBool()
+		project.EnforceFeatureOwners = &v
+	}
 	return &project
 
 }
@@ -558,6 +585,7 @@ func MakeProjectResourceDataFromClientProject(clientProject *flagsmithapi.Projec
 		OnlyAllowLowerCaseFeatureNames: types.BoolValue(clientProject.OnlyAllowLowerCaseFeatureNames),
 		FeatureNameRegex: types.StringValue(clientProject.FeatureNameRegex),
 		StaleFlagsLimitDays: types.Int64Value(clientProject.StaleFlagsLimitDays),
+		EnforceFeatureOwners: types.BoolValue(clientProject.EnforceFeatureOwners != nil && *clientProject.EnforceFeatureOwners),
 	}
 	return resourceData
 }
@@ -643,4 +671,24 @@ func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmi
 		resourceData.BannerColour = types.StringValue(clientEnvironment.BannerColour)
 	}
 	return resourceData
+}
+
+type UserResourceData struct {
+	ID             types.Int64  `tfsdk:"id"`
+	OrganisationID types.Int64  `tfsdk:"organisation_id"`
+	Email          types.String `tfsdk:"email"`
+	FirstName      types.String `tfsdk:"first_name"`
+	LastName       types.String `tfsdk:"last_name"`
+	Role           types.String `tfsdk:"role"`
+}
+
+func MakeUserResourceDataFromClientUser(clientUser *flagsmithapi.User, orgID int64) UserResourceData {
+	return UserResourceData{
+		ID:             types.Int64Value(clientUser.ID),
+		OrganisationID: types.Int64Value(orgID),
+		Email:          types.StringValue(clientUser.Email),
+		FirstName:      types.StringValue(clientUser.FirstName),
+		LastName:       types.StringValue(clientUser.LastName),
+		Role:           types.StringValue(clientUser.Role),
+	}
 }

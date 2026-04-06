@@ -115,6 +115,11 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType:         types.Int64Type,
 				MarkdownDescription: "List of user IDs representing the owners of the feature.",
 			},
+			"group_owners": schema.SetAttribute{
+				Optional:            true,
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "List of group IDs representing the group owners of the feature.",
+			},
 			"tags": schema.SetAttribute{
 				Optional:            true,
 				ElementType:         types.Int64Type,
@@ -140,25 +145,24 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	clientFeature := data.ToClientFeature()
-	owners := clientFeature.Owners
 
-	// Create the feature
+	// Create the feature - owners and group_owners are sent in the request body
+	// and the API handles them during creation
 	err := r.client.CreateFeature(clientFeature)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature, got error: %s", err))
 		return
 	}
-	if owners != nil && len(*owners) > 0 {
-		err := r.client.AddFeatureOwners(clientFeature, *owners)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to add owners to feature, got error: %s", err))
-			return
-		}
 
+	// Prevent inconsistent result when owners/group_owners not in config
+	if data.Owners == nil && clientFeature.Owners != nil && len(*clientFeature.Owners) == 0 {
+		clientFeature.Owners = nil
+	}
+	if data.GroupOwners == nil && clientFeature.GroupOwners != nil && len(*clientFeature.GroupOwners) == 0 {
+		clientFeature.GroupOwners = nil
 	}
 
-	clientFeature.Owners = owners
 	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
 
 	diags = resp.State.Set(ctx, &resourceData)
@@ -185,9 +189,12 @@ func (r *featureResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	}
 	// This prevents creating unnecessary plan change(from [] -> nil)
-	// when owners is not part of the plan
+	// when owners/group_owners is not part of the plan
 	if data.Owners == nil && feature.Owners != nil && len(*feature.Owners) == 0 {
 		feature.Owners = nil
+	}
+	if data.GroupOwners == nil && feature.GroupOwners != nil && len(*feature.GroupOwners) == 0 {
+		feature.GroupOwners = nil
 	}
 	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
 
@@ -218,7 +225,11 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 	// Generate API request body from plan
 	clientFeature := plan.ToClientFeature()
+	stateFeature := state.ToClientFeature()
+
+	// Save planned owners before UpdateFeature mutates clientFeature via API response
 	planOwners := clientFeature.Owners
+	planGroupOwners := clientFeature.GroupOwners
 
 	err := r.client.UpdateFeature(clientFeature)
 	if err != nil {
@@ -226,9 +237,9 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Update feature owners
-	if planOwners != clientFeature.Owners {
-		ownerIDsToRemove := Difference(clientFeature.Owners, planOwners)
+	// Update feature owners by diffing plan against state
+	if planOwners != nil && stateFeature.Owners != nil {
+		ownerIDsToRemove := Difference(stateFeature.Owners, planOwners)
 		if len(ownerIDsToRemove) > 0 {
 			err := r.client.RemoveFeatureOwners(clientFeature, ownerIDsToRemove)
 			if err != nil {
@@ -236,8 +247,7 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 				return
 			}
 		}
-		ownerIDsToAdd := Difference(planOwners, clientFeature.Owners)
-
+		ownerIDsToAdd := Difference(planOwners, stateFeature.Owners)
 		if len(ownerIDsToAdd) > 0 {
 			err := r.client.AddFeatureOwners(clientFeature, ownerIDsToAdd)
 			if err != nil {
@@ -246,8 +256,40 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 			}
 		}
 	}
-	clientFeature.Owners = planOwners
-	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
+
+	// Update feature group owners by diffing plan against state
+	if planGroupOwners != nil && stateFeature.GroupOwners != nil {
+		groupOwnerIDsToRemove := Difference(stateFeature.GroupOwners, planGroupOwners)
+		if len(groupOwnerIDsToRemove) > 0 {
+			err := r.client.RemoveFeatureGroupOwners(clientFeature, groupOwnerIDsToRemove)
+			if err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove feature group owners, got error: %s", err))
+				return
+			}
+		}
+		groupOwnerIDsToAdd := Difference(planGroupOwners, stateFeature.GroupOwners)
+		if len(groupOwnerIDsToAdd) > 0 {
+			err := r.client.AddFeatureGroupOwners(clientFeature, groupOwnerIDsToAdd)
+			if err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to add feature group owners, got error: %s", err))
+				return
+			}
+		}
+	}
+
+	// Re-read the feature from the API to get the final state after all mutations
+	feature, err := r.client.GetFeature(clientFeature.UUID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read feature after update, got error: %s", err))
+		return
+	}
+	if plan.Owners == nil && feature.Owners != nil && len(*feature.Owners) == 0 {
+		feature.Owners = nil
+	}
+	if plan.GroupOwners == nil && feature.GroupOwners != nil && len(*feature.GroupOwners) == 0 {
+		feature.GroupOwners = nil
+	}
+	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resourceData)

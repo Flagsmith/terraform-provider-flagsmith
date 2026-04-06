@@ -40,6 +40,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 
 - `default_enabled` (Boolean) Determines if the feature is enabled by default. If unspecified, it will default to false
 - `description` (String) Description of the feature
+- `group_owners` (Set of Number) List of group IDs representing the group owners of the feature.
 - `initial_value` (String) Determines the initial value of the feature.
 - `is_archived` (Boolean) Can be used to archive/unarchive a feature. If unspecified, it will default to false
 - `owners` (Set of Number) List of user IDs representing the owners of the feature.

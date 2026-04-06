@@ -143,6 +143,60 @@ func TestAccFeatureResourceOwners(t *testing.T) {
 	})
 }
 
+func TestAccFeatureResourceGroupOwners(t *testing.T) {
+	featureName := acctest.RandString(16)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			mustHaveEnv(t, "FLAGSMITH_GROUP_ID")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureResourceDestroy,
+
+		Steps: []resource.TestStep{
+			// Create with group_owners
+			{
+				Config: testAccFeatureResourceWithGroupOwnersConfig(featureName, "feature with group owners", []int{groupID()}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "feature_name", featureName),
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "group_owners.#", "1"),
+				),
+			},
+
+			// Update - remove group_owners
+			{
+				Config: testAccFeatureResourceWithGroupOwnersConfig(featureName, "feature without group owners", []int{}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "group_owners.#", "0"),
+				),
+			},
+
+			// Update - add group_owners back
+			{
+				Config: testAccFeatureResourceWithGroupOwnersConfig(featureName, "feature with group owners again", []int{groupID()}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_feature.test_feature", "group_owners.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFeatureResourceWithGroupOwnersConfig(featureName, description string, groupOwners []int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "flagsmith_feature" "test_feature" {
+  feature_name = "%s"
+  description  = "%s"
+  project_uuid = "%s"
+  type         = "STANDARD"
+  group_owners = %s
+}
+`, providerConfig(), featureName, description, projectUUID(), strings.Join(strings.Fields(fmt.Sprint(groupOwners)), ","))
+}
+
 func getFeatureImportID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		return getAttributefromState(s, n, "uuid")
