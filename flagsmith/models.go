@@ -566,8 +566,9 @@ func (p *ProjectResourceData) ToClientProject() *flagsmithapi.Project {
 	if !p.StaleFlagsLimitDays.IsNull() && !p.StaleFlagsLimitDays.IsUnknown() {
 		project.StaleFlagsLimitDays = p.StaleFlagsLimitDays.ValueInt64()
 	}
-	if p.EnforceFeatureOwners.ValueBool() {
-		project.EnforceFeatureOwners = p.EnforceFeatureOwners.ValueBool()
+	if !p.EnforceFeatureOwners.IsNull() && !p.EnforceFeatureOwners.IsUnknown() {
+		v := p.EnforceFeatureOwners.ValueBool()
+		project.EnforceFeatureOwners = &v
 	}
 	return &project
 
@@ -584,7 +585,7 @@ func MakeProjectResourceDataFromClientProject(clientProject *flagsmithapi.Projec
 		OnlyAllowLowerCaseFeatureNames: types.BoolValue(clientProject.OnlyAllowLowerCaseFeatureNames),
 		FeatureNameRegex: types.StringValue(clientProject.FeatureNameRegex),
 		StaleFlagsLimitDays: types.Int64Value(clientProject.StaleFlagsLimitDays),
-		EnforceFeatureOwners: types.BoolValue(clientProject.EnforceFeatureOwners),
+		EnforceFeatureOwners: types.BoolValue(clientProject.EnforceFeatureOwners != nil && *clientProject.EnforceFeatureOwners),
 	}
 	return resourceData
 }

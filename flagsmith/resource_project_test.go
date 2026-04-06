@@ -101,6 +101,14 @@ func TestAccProjectResourceEnforceFeatureOwners(t *testing.T) {
 				),
 			},
 
+			// Update to enforce_feature_owners = false
+			{
+				Config: testAccProjectResourceWithEnforceOwnersConfig(projectName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "false"),
+				),
+			},
+
 			// ImportState testing
 			{
 				ResourceName:      "flagsmith_project.test_project",
@@ -108,7 +116,7 @@ func TestAccProjectResourceEnforceFeatureOwners(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateIdFunc: getProjectImportID("flagsmith_project.test_project"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "true"),
+					resource.TestCheckResourceAttr("flagsmith_project.test_project", "enforce_feature_owners", "false"),
 				),
 			},
 		},

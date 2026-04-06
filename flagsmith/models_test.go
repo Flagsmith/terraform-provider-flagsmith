@@ -260,17 +260,37 @@ func TestProjectResourceDataWithEnforceFeatureOwners(t *testing.T) {
 	clientProject := projectResourceData.ToClientProject()
 
 	// Then
-	assert.True(t, clientProject.EnforceFeatureOwners)
+	assert.NotNil(t, clientProject.EnforceFeatureOwners)
+	assert.True(t, *clientProject.EnforceFeatureOwners)
+}
+
+func TestProjectResourceDataWithEnforceFeatureOwnersFalse(t *testing.T) {
+	// Given
+	projectResourceData := ProjectResourceData{
+		ID:                   types.Int64Value(10),
+		UUID:                 types.StringValue("uuid"),
+		Name:                 types.StringValue("test"),
+		OrganisationID:       types.Int64Value(1),
+		EnforceFeatureOwners: types.BoolValue(false),
+	}
+
+	// When
+	clientProject := projectResourceData.ToClientProject()
+
+	// Then
+	assert.NotNil(t, clientProject.EnforceFeatureOwners)
+	assert.False(t, *clientProject.EnforceFeatureOwners)
 }
 
 func TestMakeProjectResourceDataFromClientProjectWithEnforceFeatureOwners(t *testing.T) {
 	// Given
+	enforceOwners := true
 	clientProject := flagsmithapi.Project{
 		ID:                   10,
 		UUID:                 "uuid",
 		Name:                 "test",
 		Organisation:         1,
-		EnforceFeatureOwners: true,
+		EnforceFeatureOwners: &enforceOwners,
 	}
 
 	// When
