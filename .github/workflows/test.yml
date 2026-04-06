@@ -16,12 +16,6 @@ on:
 permissions:
   contents: read
 
-# Default values to simplify job configurations below.
-env:
-  # Go language version to use for building. This value should also be updated
-  # in the release workflow if changed.
-  GO_VERSION: '1.22'
-
 jobs:
   # Ensure project builds before running testing matrix
   build:
@@ -30,10 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/checkout@v6
+          go-version-file: 'go.mod'
       - run: go mod download
       - run: go build -v .
 
@@ -41,10 +35,10 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/checkout@v6
+          go-version-file: 'go.mod'
       - run: go generate ./...
       - name: git diff
         run: |
@@ -66,14 +60,14 @@ jobs:
           - '1.8.*'
           - '1.9.*'
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - uses: actions/checkout@v6
       - run: go mod download
       - env:
           FLAGSMITH_MASTER_API_KEY: ${{ secrets.FLAGSMITH_MASTER_API_KEY }}
