@@ -104,7 +104,6 @@ func groupID() int {
 	}
 	return v
 }
-
 func providerConfig() string {
 	baseAPIURL := os.Getenv("FLAGSMITH_BASE_API_URL")
 	if baseAPIURL != "" {

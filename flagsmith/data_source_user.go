@@ -85,8 +85,8 @@ func (o *userDataResource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	user, err := o.client.GetOrganisationUserByEmail(data.OrganisationID.ValueInt64(), data.Email.ValueString())
 	if err != nil {
-		panic(err)
-
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get user, got error: %s", err))
+		return
 	}
 	resourceData := MakeUserResourceDataFromClientUser(user, data.OrganisationID.ValueInt64())
 
