@@ -97,6 +97,33 @@ func userEmail() string {
 	return os.Getenv("FLAGSMITH_USER_EMAIL")
 }
 
+// Custom field (metadata) names, which must already exist in the Flagsmith project used
+// for acceptance tests. These are deliberately not part of testAccPreCheck: the tests
+// that need them call mustHaveEnv themselves, so that everything else still runs for
+// anyone who has not set the custom fields up.
+//
+// None of these custom fields may be marked as required, or every acceptance test that
+// creates a feature, segment or environment without them will fail.
+func metadataFieldName() string {
+	return os.Getenv("FLAGSMITH_METADATA_FIELD_NAME")
+}
+
+// A custom field whose name contains a space, so that flatmap addressing of such keys is
+// exercised.
+func metadataFieldNameWithSpace() string {
+	return os.Getenv("FLAGSMITH_METADATA_FIELD_NAME_WITH_SPACE")
+}
+
+// A custom field of type `int`, bound to features.
+func metadataIntFieldName() string {
+	return os.Getenv("FLAGSMITH_METADATA_INT_FIELD_NAME")
+}
+
+// A custom field bound to segments only, for testing the wrong entity type.
+func metadataSegmentOnlyFieldName() string {
+	return os.Getenv("FLAGSMITH_METADATA_SEGMENT_ONLY_FIELD_NAME")
+}
+
 func groupID() int {
 	v, err := strconv.Atoi(os.Getenv("FLAGSMITH_GROUP_ID"))
 	if err != nil {

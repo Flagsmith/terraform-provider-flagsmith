@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -127,6 +127,7 @@ func (t *environmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Default:             booldefault.StaticBool(true),
 				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
+			"metadata": metadataAttributeSchema("environment"),
 		},
 	}
 }
@@ -143,6 +144,17 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	clientEnvironment := data.ToClientEnvironment()
 
+	// project_id is Required on this resource, so it is always known here.
+	projectID := clientEnvironment.ProjectID
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityEnvironment, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientEnvironment.Metadata = metadata
+
 	// Create the environment
 	err := r.client.CreateEnvironment(clientEnvironment)
 
@@ -150,7 +162,16 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create environment, got error: %s", err))
 		return
 	}
-	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment)
+
+	// The create response includes metadata, so no extra read is needed.
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityEnvironment, clientEnvironment.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -171,7 +192,14 @@ func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest
 		panic(err)
 
 	}
-	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(environment)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, environment.ProjectID,
+		flagsmithapi.MetadataEntityEnvironment, environment.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(environment, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -191,6 +219,15 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Generate API request body from plan
 	clientEnvironment := plan.ToClientEnvironment()
+	projectID := clientEnvironment.ProjectID
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityEnvironment, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientEnvironment.Metadata = metadata
 
 	err := r.client.UpdateEnvironment(clientEnvironment)
 	if err != nil {
@@ -198,7 +235,14 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityEnvironment, clientEnvironment.Metadata, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment, metadataState)
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resourceData)

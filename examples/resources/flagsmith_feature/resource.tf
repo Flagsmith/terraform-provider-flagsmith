@@ -10,5 +10,11 @@ resource "flagsmith_feature" "new_standard_feature" {
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
   description  = "This is a new standard feature"
   type         = "STANDARD"
+
+  # Each custom field must already exist in Flagsmith and be enabled for features.
+  metadata = {
+    "Jira Ticket" = "PROD-123"
+    "Owner Team"  = "platform"
+  }
 }
 

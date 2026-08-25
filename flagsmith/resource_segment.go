@@ -132,6 +132,7 @@ func (t *segmentResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
+			"metadata": metadataAttributeSchema("segment"),
 			"rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Rules for the segment",
 				Required:            true,
@@ -169,13 +170,39 @@ func (r *segmentResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 	clientSegment := data.ToClientSegment()
 
-	err := r.client.CreateSegment(clientSegment)
+	// project_id is Computed, so resolve it from the UUID before resolving custom field
+	// names. This is free: CreateSegment would otherwise do the same lookup itself.
+	projectID, err := resolveProjectID(r.client, clientSegment.ProjectID, clientSegment.ProjectUUID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to resolve project, got error: %s", err))
+		return
+	}
+	clientSegment.ProjectID = &projectID
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntitySegment, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientSegment.Metadata = metadata
+
+	err = r.client.CreateSegment(clientSegment)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create segment, got error: %s", err))
 		return
 	}
-	resourceData := MakeSegmentResourceDataFromClientSegment(clientSegment)
+
+	// The create response includes metadata, so no extra read is needed.
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntitySegment, clientSegment.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeSegmentResourceDataFromClientSegment(clientSegment, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -201,7 +228,14 @@ func (r *segmentResource) Read(ctx context.Context, req resource.ReadRequest, re
 		panic(err)
 
 	}
-	resourceData := MakeSegmentResourceDataFromClientSegment(segment)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, *segment.ProjectID,
+		flagsmithapi.MetadataEntitySegment, segment.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeSegmentResourceDataFromClientSegment(segment, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -231,13 +265,35 @@ func (r *segmentResource) Update(ctx context.Context, req resource.UpdateRequest
 	// Generate API request body from plan
 	clientSegment := plan.ToClientSegment()
 
-	err := r.client.UpdateSegment(clientSegment)
+	projectID, err := resolveProjectID(r.client, clientSegment.ProjectID, clientSegment.ProjectUUID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to resolve project, got error: %s", err))
+		return
+	}
+	clientSegment.ProjectID = &projectID
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntitySegment, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientSegment.Metadata = metadata
+
+	err = r.client.UpdateSegment(clientSegment)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update segment, got error: %s", err))
 		return
 	}
 
-	resourceData := MakeSegmentResourceDataFromClientSegment(clientSegment)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntitySegment, clientSegment.Metadata, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeSegmentResourceDataFromClientSegment(clientSegment, metadataState)
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resourceData)

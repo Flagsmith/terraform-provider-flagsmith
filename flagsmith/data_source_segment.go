@@ -7,6 +7,7 @@ import (
 	"github.com/Flagsmith/flagsmith-go-api-client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -111,6 +112,11 @@ func (s *segmentDataResource) Schema(ctx context.Context, req datasource.SchemaR
 				Computed:            true,
 				MarkdownDescription: "Description of the segment",
 			},
+			"metadata": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this segment, keyed by custom field name.",
+			},
 			"rules": schema.ListNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "Rules for the segment",
@@ -144,7 +150,14 @@ func (s *segmentDataResource) Read(ctx context.Context, req datasource.ReadReque
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read segment, got error: %s", err))
 		return
 	}
-	resourceData := MakeSegmentResourceDataFromClientSegment(segment)
+	metadata, diags := metadataFromClient(ctx, s.client, *segment.ProjectID,
+		flagsmithapi.MetadataEntitySegment, segment.Metadata, types.MapNull(types.StringType))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeSegmentResourceDataFromClientSegment(segment, metadata)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
