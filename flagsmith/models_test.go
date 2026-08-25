@@ -194,7 +194,7 @@ func TestMakeFeatureResourceDataFromClientFeatureWithGroupOwners(t *testing.T) {
 	}
 
 	// When
-	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature)
+	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature, types.MapNull(types.StringType))
 
 	// Then
 	assert.NotNil(t, resourceData.GroupOwners)
@@ -218,7 +218,7 @@ func TestMakeFeatureResourceDataFromClientFeatureNilGroupOwners(t *testing.T) {
 	}
 
 	// When
-	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature)
+	resourceData := MakeFeatureResourceDataFromClientFeature(&clientFeature, types.MapNull(types.StringType))
 
 	// Then
 	assert.Nil(t, resourceData.GroupOwners)

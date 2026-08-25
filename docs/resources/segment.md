@@ -23,6 +23,12 @@ resource "flagsmith_feature" "new_standard_feature" {
 resource "flagsmith_segment" "device_type_segment" {
   name         = "device_type"
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
+
+  # Each custom field must already exist in Flagsmith and be enabled for segments.
+  metadata = {
+    "Jira Ticket" = "PROD-123"
+  }
+
   rules = [
     {
       "rules" : [{
@@ -76,6 +82,7 @@ resource "flagsmith_segment" "new_standard_feature_specific_segment" {
 
 - `description` (String) Description of the segment
 - `feature_id` (Number) Set this to create a feature specific segment
+- `metadata` (Map of String) Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this segment, keyed by custom field name. The field must already exist in Flagsmith and be enabled for segments. Terraform is authoritative: values set outside of Terraform are removed on the next write.
 
 ### Read-Only
 
