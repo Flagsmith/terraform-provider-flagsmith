@@ -91,6 +91,8 @@ func (p *fsProvider) DataSources(ctx context.Context) []func() datasource.DataSo
 		newOrganisationDataResource,
 		newProjectDataResource,
 		newUserDataResource,
+		newFeatureDataResource,
+		newSegmentDataResource,
 	}
 }
 
