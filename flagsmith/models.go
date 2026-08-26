@@ -226,6 +226,7 @@ type FeatureResourceData struct {
 	Tags           *[]types.Int64 `tfsdk:"tags"`
 	ProjectID      types.Int64    `tfsdk:"project_id"`
 	ProjectUUID    types.String   `tfsdk:"project_uuid"`
+	Metadata       types.Map      `tfsdk:"metadata"`
 }
 
 func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
@@ -285,7 +286,9 @@ func (f *FeatureResourceData) ToClientFeature() *flagsmithapi.Feature {
 
 }
 
-func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Feature) FeatureResourceData {
+// metadata is passed in already resolved: the client struct carries model field IDs,
+// and mapping those to custom field names needs an API lookup.
+func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Feature, metadata types.Map) FeatureResourceData {
 	resourceData := FeatureResourceData{
 		UUID:           types.StringValue(clientFeature.UUID),
 		ID:             types.Int64Value(*clientFeature.ID),
@@ -298,6 +301,7 @@ func MakeFeatureResourceDataFromClientFeature(clientFeature *flagsmithapi.Featur
 		ProjectUUID:    types.StringValue(clientFeature.ProjectUUID),
 		Owners:         &[]types.Int64{},
 		GroupOwners:    &[]types.Int64{},
+		Metadata:       metadata,
 	}
 	if clientFeature.Description != nil {
 		resourceData.Description = types.StringValue(*clientFeature.Description)
@@ -424,6 +428,7 @@ type SegmentResourceData struct {
 	ProjectUUID types.String `tfsdk:"project_uuid"`
 	FeatureID   types.Int64  `tfsdk:"feature_id"`
 	Rules       []Rule       `tfsdk:"rules"`
+	Metadata    types.Map    `tfsdk:"metadata"`
 }
 
 func (s *SegmentResourceData) ToClientSegment() *flagsmithapi.Segment {
@@ -454,13 +459,16 @@ func (s *SegmentResourceData) ToClientSegment() *flagsmithapi.Segment {
 	return &segment
 }
 
-func MakeSegmentResourceDataFromClientSegment(clientSegment *flagsmithapi.Segment) SegmentResourceData {
+// metadata is passed in already resolved: the client struct carries model field IDs,
+// and mapping those to custom field names needs an API lookup.
+func MakeSegmentResourceDataFromClientSegment(clientSegment *flagsmithapi.Segment, metadata types.Map) SegmentResourceData {
 	resourceData := SegmentResourceData{
 		ID:          types.Int64Value(*clientSegment.ID),
 		UUID:        types.StringValue(clientSegment.UUID),
 		Name:        types.StringValue(clientSegment.Name),
 		ProjectID:   types.Int64Value(*clientSegment.ProjectID),
 		ProjectUUID: types.StringValue(clientSegment.ProjectUUID),
+		Metadata:    metadata,
 	}
 	if clientSegment.Description != nil {
 		resourceData.Description = types.StringValue(*clientSegment.Description)
@@ -623,6 +631,7 @@ type EnvironmentResourceData struct {
 	HideSensitiveData types.Bool `tfsdk:"hide_sensitive_data"`
 	UseIdentityCompositeKeyForHashing types.Bool `tfsdk:"use_identity_composite_key_for_hashing"`
 	MinimumChangeRequestApprovals types.Int64 `tfsdk:"minimum_change_request_approvals"`
+	Metadata types.Map `tfsdk:"metadata"`
 
 }
 
@@ -647,7 +656,9 @@ func (e *EnvironmentResourceData) ToClientEnvironment() *flagsmithapi.Environmen
 	return &environment
 }
 
-func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmithapi.Environment) EnvironmentResourceData {
+// metadata is passed in already resolved: the client struct carries model field IDs,
+// and mapping those to custom field names needs an API lookup.
+func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmithapi.Environment, metadata types.Map) EnvironmentResourceData {
 	resourceData := EnvironmentResourceData{
 		ID:          types.Int64Value(clientEnvironment.ID),
 		UUID:        types.StringValue(clientEnvironment.UUID),
@@ -659,6 +670,7 @@ func MakeEnvironmentResourceDataFromClientEnvironment(clientEnvironment *flagsmi
 		HideDisabledFlags: types.BoolValue(clientEnvironment.HideDisabledFlags),
 		HideSensitiveData: types.BoolValue(clientEnvironment.HideSensitiveData),
 		UseIdentityCompositeKeyForHashing: types.BoolValue(clientEnvironment.UseIdentityCompositeKeyForHashing),
+		Metadata: metadata,
 	}
 	if clientEnvironment.Description != "" {
 		resourceData.Description = types.StringValue(clientEnvironment.Description)

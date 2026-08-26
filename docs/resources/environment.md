@@ -28,6 +28,7 @@ Flagsmith Environment
 - `description` (String) Description of the environment
 - `hide_disabled_flags` (Boolean) If true will exclude flags from SDK which are disabled
 - `hide_sensitive_data` (Boolean) If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints
+- `metadata` (Map of String) Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this environment, keyed by custom field name. The field must already exist in Flagsmith and be enabled for environments. Terraform is authoritative: values set outside of Terraform are removed on the next write.
 - `minimum_change_request_approvals` (Number) Minimum number of approvals required for a change request
 - `use_identity_composite_key_for_hashing` (Boolean) Enable this to have consistent multivariate and percentage split evaluations across all SDKs (in local and server side mode)
 

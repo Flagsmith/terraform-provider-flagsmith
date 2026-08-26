@@ -32,7 +32,6 @@ func TestAccSegmentDataResource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "description", "created by the segment data source acceptance test"),
 					resource.TestCheckResourceAttrSet("data.flagsmith_segment.test_segment", "id"),
 
-					// The whole rules tree round trips.
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "rules.#", "1"),
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "rules.0.type", "ALL"),
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "rules.0.rules.0.type", "ANY"),
@@ -40,7 +39,6 @@ func TestAccSegmentDataResource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.property", "device_type"),
 					resource.TestCheckResourceAttr("data.flagsmith_segment.test_segment", "rules.0.rules.0.conditions.0.value", "mobile"),
 
-					// The lookup must resolve to the segment we created.
 					resource.TestCheckResourceAttrPair(
 						"data.flagsmith_segment.test_segment", "uuid",
 						"flagsmith_segment.test_segment", "uuid"),

@@ -35,7 +35,6 @@ func TestAccFeatureDataResource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.flagsmith_feature.test_feature", "is_archived", "false"),
 					resource.TestCheckResourceAttrSet("data.flagsmith_feature.test_feature", "id"),
 
-					// The lookup must resolve to the feature we created.
 					resource.TestCheckResourceAttrPair(
 						"data.flagsmith_feature.test_feature", "uuid",
 						"flagsmith_feature.test_feature", "uuid"),

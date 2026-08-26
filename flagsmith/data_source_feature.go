@@ -104,6 +104,11 @@ func (f *featureDataResource) Schema(ctx context.Context, req datasource.SchemaR
 				ElementType:         types.Int64Type,
 				MarkdownDescription: "List of tag IDs representing the tags attached to the feature.",
 			},
+			"metadata": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this feature, keyed by custom field name.",
+			},
 		},
 	}
 }
@@ -123,7 +128,14 @@ func (f *featureDataResource) Read(ctx context.Context, req datasource.ReadReque
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read feature, got error: %s", err))
 		return
 	}
-	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
+	metadata, diags := metadataFromClient(ctx, f.client, *feature.ProjectID,
+		flagsmithapi.MetadataEntityFeature, feature.Metadata, types.MapNull(types.StringType))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeFeatureResourceDataFromClientFeature(feature, metadata)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)

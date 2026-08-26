@@ -130,6 +130,7 @@ func (t *featureResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:            true,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
+			"metadata": metadataAttributeSchema("feature"),
 		},
 	}
 }
@@ -146,9 +147,26 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 
 	clientFeature := data.ToClientFeature()
 
+	// project_id is Computed, so resolve it from the UUID before resolving custom field
+	// names. This is free: CreateFeature would otherwise do the same lookup itself.
+	projectID, err := resolveProjectID(r.client, clientFeature.ProjectID, clientFeature.ProjectUUID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to resolve project, got error: %s", err))
+		return
+	}
+	clientFeature.ProjectID = &projectID
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityFeature, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientFeature.Metadata = metadata
+
 	// Create the feature - owners and group_owners are sent in the request body
 	// and the API handles them during creation
-	err := r.client.CreateFeature(clientFeature)
+	err = r.client.CreateFeature(clientFeature)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feature, got error: %s", err))
@@ -163,7 +181,15 @@ func (r *featureResource) Create(ctx context.Context, req resource.CreateRequest
 		clientFeature.GroupOwners = nil
 	}
 
-	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature)
+	// The create response includes metadata, so no extra read is needed.
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityFeature, clientFeature.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeFeatureResourceDataFromClientFeature(clientFeature, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -196,7 +222,14 @@ func (r *featureResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if data.GroupOwners == nil && feature.GroupOwners != nil && len(*feature.GroupOwners) == 0 {
 		feature.GroupOwners = nil
 	}
-	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, *feature.ProjectID,
+		flagsmithapi.MetadataEntityFeature, feature.Metadata, data.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeFeatureResourceDataFromClientFeature(feature, metadataState)
 
 	diags = resp.State.Set(ctx, &resourceData)
 	resp.Diagnostics.Append(diags...)
@@ -231,7 +264,21 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	planOwners := clientFeature.Owners
 	planGroupOwners := clientFeature.GroupOwners
 
-	err := r.client.UpdateFeature(clientFeature)
+	projectID, err := resolveProjectID(r.client, clientFeature.ProjectID, clientFeature.ProjectUUID)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to resolve project, got error: %s", err))
+		return
+	}
+
+	metadata, metadataDiags := resolveMetadataForWrite(ctx, r.client, projectID,
+		flagsmithapi.MetadataEntityFeature, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	clientFeature.Metadata = metadata
+
+	err = r.client.UpdateFeature(clientFeature)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feature, got error: %s", err))
 		return
@@ -289,7 +336,14 @@ func (r *featureResource) Update(ctx context.Context, req resource.UpdateRequest
 	if plan.GroupOwners == nil && feature.GroupOwners != nil && len(*feature.GroupOwners) == 0 {
 		feature.GroupOwners = nil
 	}
-	resourceData := MakeFeatureResourceDataFromClientFeature(feature)
+	metadataState, metadataDiags := metadataFromClient(ctx, r.client, *feature.ProjectID,
+		flagsmithapi.MetadataEntityFeature, feature.Metadata, plan.Metadata)
+	resp.Diagnostics.Append(metadataDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceData := MakeFeatureResourceDataFromClientFeature(feature, metadataState)
 
 	// Update the state with the new values
 	diags = resp.State.Set(ctx, &resourceData)

@@ -48,6 +48,7 @@ resource "flagsmith_feature_state" "mobile_override" {
 - `description` (String) Description of the segment
 - `feature_id` (Number) ID of the feature the segment is specific to, if any
 - `id` (Number) ID of the segment
+- `metadata` (Map of String) Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this segment, keyed by custom field name.
 - `name` (String) Name of the segment
 - `project_id` (Number) ID of the project the segment belongs to
 - `project_uuid` (String) UUID of the project the segment belongs to
