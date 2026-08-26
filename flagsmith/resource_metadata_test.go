@@ -120,7 +120,10 @@ func TestAccFeatureResourceMetadataWrongEntity(t *testing.T) {
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{
 					metadataSegmentOnlyFieldName(): "value",
 				}),
-				ExpectError: regexp.MustCompile("not enabled for features"),
+				// Matched against the diagnostic summary rather than the detail, because
+				// Terraform hard wraps the detail and the phrasing this asserts on would
+				// otherwise be split across a line break.
+				ExpectError: regexp.MustCompile("Custom field not enabled for this entity"),
 			},
 		},
 	})
