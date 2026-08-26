@@ -46,6 +46,7 @@ resource "flagsmith_feature_state" "staging_override" {
 - `id` (Number) ID of the feature
 - `initial_value` (String) Initial value of the feature
 - `is_archived` (Boolean) Determines if the feature is archived
+- `metadata` (Map of String) Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this feature, keyed by custom field name.
 - `owners` (Set of Number) List of user IDs representing the owners of the feature.
 - `project_id` (Number) ID of the project the feature belongs to
 - `project_uuid` (String) UUID of the project the feature belongs to

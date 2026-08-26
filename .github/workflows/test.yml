@@ -82,6 +82,12 @@ jobs:
           FLAGSMITH_ORGANISATION_ID: 6880
           FLAGSMITH_USER_EMAIL: gagandeeptrivedi47@flagsmith.com
           FLAGSMITH_GROUP_ID: 3599
+          # Custom fields that must exist in the project above, none of them required.
+          # Marking any of them required would break every other acceptance test.
+          FLAGSMITH_METADATA_FIELD_NAME: tf_acc_str
+          FLAGSMITH_METADATA_FIELD_NAME_WITH_SPACE: Jira Ticket
+          FLAGSMITH_METADATA_INT_FIELD_NAME: tf_acc_int
+          FLAGSMITH_METADATA_SEGMENT_ONLY_FIELD_NAME: tf_acc_segment_only
           TF_ACC: "1"
         run: go test -v -cover ./flagsmith/
         timeout-minutes: 10

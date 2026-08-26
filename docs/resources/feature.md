@@ -25,6 +25,12 @@ resource "flagsmith_feature" "new_standard_feature" {
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
   description  = "This is a new standard feature"
   type         = "STANDARD"
+
+  # Each custom field must already exist in Flagsmith and be enabled for features.
+  metadata = {
+    "Jira Ticket" = "PROD-123"
+    "Owner Team"  = "platform"
+  }
 }
 ```
 
@@ -43,6 +49,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 - `group_owners` (Set of Number) List of group IDs representing the group owners of the feature.
 - `initial_value` (String) Determines the initial value of the feature.
 - `is_archived` (Boolean) Can be used to archive/unarchive a feature. If unspecified, it will default to false
+- `metadata` (Map of String) Custom field ([metadata](https://docs.flagsmith.com/administration-and-security/governance-and-compliance/custom-fields)) values for this feature, keyed by custom field name. The field must already exist in Flagsmith and be enabled for features. Terraform is authoritative: values set outside of Terraform are removed on the next write.
 - `owners` (Set of Number) List of user IDs representing the owners of the feature.
 - `tags` (Set of Number) List of tag IDs representing the tags attached to the feature.
 - `type` (String) Type of the feature, can be STANDARD, or MULTIVARIATE. if unspecified, it will default to STANDARD
