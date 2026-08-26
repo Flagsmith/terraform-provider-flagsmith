@@ -55,7 +55,12 @@ release:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  # github-webhook-handler has already created the GitHub release and written its
+  # notes by the time the tag push gets here, so attach artifacts and leave the
+  # notes alone.
+  mode: keep-existing
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
+# release-please owns the changelog.
 changelog:
   disable: true
