@@ -1,3 +1,39 @@
+## 0.12.0
+FEATURES:
+* Add data source `flagsmith_feature`
+* Add data source `flagsmith_segment`
+* Add `metadata` to resources `flagsmith_feature`, `flagsmith_segment` and `flagsmith_environment`, to set custom field values
+
+NOTES:
+* Custom fields are managed authoritatively: values set outside of Terraform are removed on the next write. The provider previously never sent `metadata` at all, so updating a feature, segment or environment already cleared its UI-set custom field values silently. Those values now appear in the plan as an explicit removal instead — add them to `metadata` to keep them.
+
+ENHANCEMENTS:
+* Update dependencies
+
+## 0.11.0
+FEATURES:
+* Add data source `flagsmith_project`
+
+ENHANCEMENTS:
+* Update dependencies
+
+## 0.10.0
+FEATURES:
+* Add data source `flagsmith_user`
+* resource(flagsmith_feature): Add `group_owners`
+* resource(flagsmith_project): Add `enforce_feature_owners`
+
+BUG FIXES
+* Update `.goreleaser.yml` to the v2 format, so that releases publish again
+
+ENHANCEMENTS:
+* Add import block examples for Terraform v1.5.0+
+* Update dependencies
+
+## 0.9.1
+ENHANCEMENTS:
+* Update dependencies
+
 ## 0.9.0
 FEATURES:
 * Add resource `flagsmith_project`
