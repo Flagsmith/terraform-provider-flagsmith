@@ -33,7 +33,6 @@ func TestAccFeatureResourceMetadata(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureResourceDestroy,
 		Steps: []resource.TestStep{
-			// Create with two custom field values
 			{
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{
 					metadataFieldName():          "first-value",
@@ -53,7 +52,6 @@ func TestAccFeatureResourceMetadata(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateIdFunc: getFeatureImportID(resourceName),
 			},
-			// Change one value
 			{
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{
 					metadataFieldName():          "second-value",
@@ -64,7 +62,6 @@ func TestAccFeatureResourceMetadata(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata."+metadataFieldName(), "second-value"),
 				),
 			},
-			// Drop one key
 			{
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{
 					metadataFieldName(): "second-value",
@@ -74,14 +71,12 @@ func TestAccFeatureResourceMetadata(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "metadata."+metadataFieldNameWithSpace()),
 				),
 			},
-			// Set an explicit empty map
 			{
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 				),
 			},
-			// Remove the attribute entirely
 			{
 				Config: testAccFeatureMetadataConfig(featureName, nil),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -120,9 +115,6 @@ func TestAccFeatureResourceMetadataWrongEntity(t *testing.T) {
 				Config: testAccFeatureMetadataConfig(featureName, map[string]string{
 					metadataSegmentOnlyFieldName(): "value",
 				}),
-				// Matched against the diagnostic summary rather than the detail, because
-				// Terraform hard wraps the detail and the phrasing this asserts on would
-				// otherwise be split across a line break.
 				ExpectError: regexp.MustCompile("Custom field not enabled for this entity"),
 			},
 		},
