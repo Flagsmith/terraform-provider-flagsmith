@@ -6,7 +6,11 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "deps"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "deps"
