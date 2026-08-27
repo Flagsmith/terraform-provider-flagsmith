@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.1](https://github.com/Flagsmith/terraform-provider-flagsmith/compare/v0.12.0...v0.12.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **deps:** Bump golang.org/x/crypto and google.golang.org/grpc ([#250](https://github.com/Flagsmith/terraform-provider-flagsmith/issues/250)) ([3f4606e](https://github.com/Flagsmith/terraform-provider-flagsmith/commit/3f4606e5217e3301467007dd0d9df1eb592e4d6d))
+
+
+### CI
+
+* Add release-please and bring CHANGELOG up to date ([#247](https://github.com/Flagsmith/terraform-provider-flagsmith/issues/247)) ([bfe0ce3](https://github.com/Flagsmith/terraform-provider-flagsmith/commit/bfe0ce3fc461293d725d6a22e26b9a395dc97606))
+
 ## [0.12.0](https://github.com/Flagsmith/terraform-provider-flagsmith/compare/v0.11.0...v0.12.0) (2026-08-26)
 
 
